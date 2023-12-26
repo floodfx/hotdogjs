@@ -1,0 +1,8 @@
+{
+  "name": "hotdogjs",
+  "version": "0.0.1",
+  "workspaces": ["packages/*"],
+  "devDependencies": {
+    "@types/bun": "^1.0.0"
+  }
+}
