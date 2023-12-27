@@ -49,76 +49,81 @@ type BlurPayload = Phx.EventPayload<"blur", { value: string }>;
 type HookPayload = Phx.EventPayload<"hook", Record<string, string>>;
 
 export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload): Promise<Template | Tree> {
-  const { type, event, cid } = payload;
+  try {
+    const { type, event, cid } = payload;
 
-  let value: { [key: string]: unknown } | string | number = {};
-  switch (type) {
-    case "click":
-    case "keyup":
-    case "keydown":
-    case "blur":
-    case "focus":
-    case "hook":
-      value = payload.value;
-      break;
-    case "form":
-      // parse payload into form data
-      const pl = payload as FormPayload;
-      value = Object.fromEntries(new URLSearchParams(pl.value));
-      // if _csrf_token is set, ensure it is the same as session csrf token
-      if (value.hasOwnProperty("_csrf_token")) {
-        if (value._csrf_token !== ctx.csrfToken) {
-          throw new Error("Mismatched CSRF token");
+    let value: { [key: string]: unknown } | string | number = {};
+    switch (type) {
+      case "click":
+      case "keyup":
+      case "keydown":
+      case "blur":
+      case "focus":
+      case "hook":
+        value = payload.value;
+        break;
+      case "form":
+        // parse payload into form data
+        const pl = payload as FormPayload;
+        value = Object.fromEntries(new URLSearchParams(pl.value));
+        // if _csrf_token is set, ensure it is the same as session csrf token
+        if (value.hasOwnProperty("_csrf_token")) {
+          if (value._csrf_token !== ctx.csrfToken) {
+            throw new Error("Mismatched CSRF token");
+          }
+        } else {
+          console.warn(
+            `Warning: form event data missing _csrf_token value. \nConsider passing it in via a hidden input named "_csrf_token".  \nYou can get the value from the LiveViewMeta object passed the render method. \n`
+          );
         }
-      } else {
-        console.warn(
-          `Warning: form event data missing _csrf_token value. \nConsider passing it in via a hidden input named "_csrf_token".  \nYou can get the value from the LiveViewMeta object passed the render method. \n`
-        );
-      }
 
-      // parse uploads into uploadConfig for given name
-      if (pl.uploads) {
-        const { uploads } = pl;
-        // get _target from form data
-        const target = value["_target"] as string;
-        if (target && ctx.uploadConfigs.hasOwnProperty(target)) {
-          const config = ctx.uploadConfigs[target];
-          // check config ref matches uploads key
-          if (uploads.hasOwnProperty(config.ref)) {
-            const entries = uploads[config.ref].map((upload) => {
-              return new UploadEntry(upload, config);
-            });
-            config.setEntries(entries);
+        // parse uploads into uploadConfig for given name
+        if (pl.uploads) {
+          const { uploads } = pl;
+          // get _target from form data
+          const target = value["_target"] as string;
+          if (target && ctx.uploadConfigs.hasOwnProperty(target)) {
+            const config = ctx.uploadConfigs[target];
+            // check config ref matches uploads key
+            if (uploads.hasOwnProperty(config.ref)) {
+              const entries = uploads[config.ref].map((upload) => {
+                return new UploadEntry(upload, config);
+              });
+              config.setEntries(entries);
+            }
           }
         }
-      }
-      break;
-    default:
-      throw new Error(`Unknown event type: ${type}`);
-  }
+        break;
+      default:
+        throw new Error(`Unknown event type: ${type}`);
+    }
 
-  // for "lv:clear-flash" events we don't need to call handleEvent
-  if (event === "lv:clear-flash") {
-    const clearFlashPayload = payload as LVClearFlashPayload;
-    const key = clearFlashPayload.value.key;
-    ctx.clearFlash(key);
-    // render the live view with the cleared flash
-    return await ctx.view.render();
-  }
+    // for "lv:clear-flash" events we don't need to call handleEvent
+    if (event === "lv:clear-flash") {
+      const clearFlashPayload = payload as LVClearFlashPayload;
+      const key = clearFlashPayload.value.key;
+      ctx.clearFlash(key);
+      // render the live view with the cleared flash
+      return await ctx.view.render();
+    }
 
-  // if value is a string or number, wrap it in an object
-  if (typeof value === "string" || typeof value === "number") {
-    value = { value };
-  }
+    // if value is a string or number, wrap it in an object
+    if (typeof value === "string" || typeof value === "number") {
+      value = { value };
+    }
 
-  // if no cid then target is the LiveView
-  if (!cid) {
-    // target is the LiveView
-    await ctx.view.handleEvent(ctx, { type: event, ...value });
-    return await ctx.view.render();
-  }
+    // if no cid then target is the LiveView
+    if (!cid) {
+      // target is the LiveView
+      await ctx.view.handleEvent(ctx, { type: event, ...value });
+      return await ctx.view.render();
+    }
 
-  // target is a LiveComponent
-  throw new Error("TODO: handle LiveComponent events");
-  // return await ctx.components.handleEvent(cid, { type: event, ...value });
+    // target is a LiveComponent
+    throw new Error("TODO: handle LiveComponent events");
+    // return await ctx.components.handleEvent(cid, { type: event, ...value });
+  } catch (e) {
+    console.error("Error handling event", e);
+    throw e;
+  }
 }

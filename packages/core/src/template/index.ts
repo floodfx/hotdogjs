@@ -28,7 +28,7 @@ export function safe(value: unknown): Template {
   return new Template([String(value)], []);
 }
 
-function escapehtml(unsafe: unknown): string {
+export function escapehtml(unsafe: unknown): string {
   if (unsafe instanceof Template) {
     return unsafe.toString();
   }

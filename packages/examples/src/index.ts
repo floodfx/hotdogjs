@@ -86,7 +86,6 @@ const server = Bun.serve<HotdogInfo>({
       console.log("csrfToken", csrfToken);
       const success = server.upgrade(req, {
         data: {
-          sessionId: 0,
           csrfToken,
         },
       });
@@ -107,12 +106,12 @@ const server = Bun.serve<HotdogInfo>({
     open(ws) {
       ws.data.wsHandler = new WsHandler(ws, router, ws.data.csrfToken);
     },
-    message(ws, message) {
+    async message(ws, message) {
       if (message instanceof Buffer) {
-        ws.data.wsHandler.handleMsgData(message);
+        await ws.data.wsHandler.handleMsgData(message);
         return;
       }
-      ws.data.wsHandler.handleMsgString(message);
+      await ws.data.wsHandler.handleMsgString(message);
     },
     close(ws) {
       ws.data.wsHandler?.close();

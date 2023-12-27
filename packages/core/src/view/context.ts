@@ -76,7 +76,7 @@ export interface ViewContext<E extends ViewEvent> {
    * @param topic the topic to subscribe this `LiveView`to
    */
   subscribe(event: E["type"]): void | Promise<void>;
-  publish(event: AnyEvent): void | Promise<void>;
+  publish(event: Event<E>): void | Promise<void>;
   // /**
   //  * Allows file uploads for the given `LiveView`and configures the upload
   //  * options (filetypes, size, etc).
@@ -115,45 +115,6 @@ export interface ViewContext<E extends ViewEvent> {
   //   completed: UploadEntry[];
   //   inProgress: UploadEntry[];
   // }>;
-}
-
-type ViewContextParams<T> = {
-  id: string;
-  url: URL;
-  view: View<AnyEvent>;
-  ws: ServerWebSocket<T>;
-  wsHandler: WsHandler<T>;
-};
-
-export class PlaceholderViewContext implements ViewContext<any> {
-  get id() {
-    return "";
-  }
-  get connected() {
-    return false;
-  }
-  get url() {
-    return new URL("https://example.com");
-  }
-  pageTitle: string = "";
-  pushEvent(pushEvent: AnyPushEvent): void {
-    throw new Error("Method not implemented.");
-  }
-  pushPatch(path: string, params?: URLSearchParams | undefined, replaceHistory?: boolean | undefined): void {
-    throw new Error("Method not implemented.");
-  }
-  pushRedirect(path: string, params?: URLSearchParams | undefined, replaceHistory?: boolean | undefined): void {
-    throw new Error("Method not implemented.");
-  }
-  dispatchEvent(event: any): void | Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  subscribe(event: any): void | Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  publish(event: AnyEvent): void | Promise<void> {
-    throw new Error("Method not implemented.");
-  }
 }
 
 export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewContext<E> {
@@ -201,7 +162,7 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
   dispatchEvent(event: E): void | Promise<void> {
     // noop
   }
-  publish(event: AnyEvent): void | Promise<void> {
+  publish(event: Event<E>): void | Promise<void> {
     // noop
   }
   // allowUpload(name: string, options?: UploadConfigOptions): Promise<void> {
@@ -246,6 +207,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
 
   #ws: ServerWebSocket<any>;
   #wsHandler: WsHandler<any>;
+  #channels: Record<string, BroadcastChannel> = {};
 
   constructor(
     id: string,
@@ -297,14 +259,29 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
       return this.#wsHandler.handleSendInfo(event);
     }
   }
-  subscribe(event: E["type"]): void | Promise<void> {
+  subscribe(event: E["type"]) {
     if (this.connected) {
-      this.#ws.subscribe(event);
+      let bc = this.#channels[event];
+      if (!bc) {
+        this.#channels[event] = new BroadcastChannel(event);
+        bc = this.#channels[event];
+      }
+      bc.addEventListener("message", (e) => {
+        console.log("broadcast message", e);
+        this.dispatchEvent(JSON.parse(e.data));
+      });
     }
   }
-  publish(event: AnyEvent): void | Promise<void> {
+  publish(event: Event<E>) {
+    // convert string to event if needed
+    const evt = typeof event === "string" ? { type: event } : event;
     if (this.connected) {
-      this.#ws.publish(event.type, JSON.stringify(event), false);
+      let bc = this.#channels[evt.type];
+      if (!bc) {
+        this.#channels[evt.type] = new BroadcastChannel(evt.type);
+        bc = this.#channels[evt.type];
+      }
+      bc.postMessage(JSON.stringify(evt));
     }
   }
 
