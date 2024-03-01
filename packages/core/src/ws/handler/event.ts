@@ -1,7 +1,7 @@
 import { WsViewContext } from "index";
 import { Template, Tree } from "template";
 import { Phx } from "../protocol/phx";
-import { UploadEntry } from "./uploadEntry";
+import { DefaultUploadEntry } from "./uploadEntry";
 
 type EventUpload = {
   path: string; // config path
@@ -87,7 +87,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
             // check config ref matches uploads key
             if (uploads.hasOwnProperty(config.ref)) {
               const entries = uploads[config.ref].map((upload) => {
-                return new UploadEntry(upload, config);
+                return new DefaultUploadEntry(upload, config);
               });
               config.setEntries(entries);
             }
@@ -104,7 +104,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       const key = clearFlashPayload.value.key;
       ctx.clearFlash(key);
       // render the live view with the cleared flash
-      return await ctx.view.render();
+      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
     }
 
     // if value is a string or number, wrap it in an object
@@ -116,7 +116,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
     if (!cid) {
       // target is the LiveView
       await ctx.view.handleEvent(ctx, { type: event, ...value });
-      return await ctx.view.render();
+      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
     }
 
     // target is a LiveComponent

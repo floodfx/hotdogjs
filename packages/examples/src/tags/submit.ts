@@ -3,6 +3,7 @@ import { escapehtml, html, safe } from "hotdogjs-core";
 interface SubmitOptions {
   phx_disable_with?: string;
   disabled?: boolean;
+  classes?: string;
   [key: string]: string | number | boolean | undefined;
 }
 
@@ -18,5 +19,5 @@ export function submit(label: string, options?: SubmitOptions) {
     return acc;
   }, "");
   // prettier-ignore
-  return html`<button type="submit"${safe(attrs)}>${label}</button>`;
+  return html`<button ${options?.classes ? safe(`class="${options?.classes}"`) : ""} type="submit"${safe(attrs)}>${label}</button>`;
 }

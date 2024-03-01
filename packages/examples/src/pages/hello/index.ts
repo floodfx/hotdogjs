@@ -4,8 +4,10 @@ export default class Html extends BaseView<AnyEvent> {
   name: string = "world";
 
   mount(ctx: ViewContext<AnyEvent>, e: MountEvent): void | Promise<void> {
-    this.name = e.params.name ?? "world";
+    console.log("query", e.query);
+    this.name = e.query.name ?? "world";
+    console.log("name", this.name);
   }
 
-  render = () => this.renderFile(import.meta, "name.html");
+  render = () => this.renderFile(import.meta);
 }

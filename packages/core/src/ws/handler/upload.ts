@@ -1,42 +1,54 @@
 import { randomUUID } from "crypto";
-import { WsViewContext } from "index";
+import { DefaultUploadEntry, WsViewContext } from "index";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { Template } from "template";
 import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
 import { UploadConfig } from "./uploadConfig";
 
-export async function onUploadBinary(
-  ctx: WsViewContext,
-  msg: Phx.Msg<Buffer>,
-): Promise<PhxReply.Reply[]> {
+function tempPath(lastPathPart: string): string {
+  // ensure the temp directory exists
+  const tempDir = path.join(os.tmpdir(), "com.liveviewjs.files");
+  if (!existsSync(tempDir)) {
+    mkdirSync(tempDir);
+  }
+  return path.join(tempDir, lastPathPart);
+}
+function writeTempFile(dest: string, data: Buffer) {
+  writeFileSync(dest, data);
+}
+function createOrAppendFile(dest: string, src: string) {
+  appendFileSync(dest, readFileSync(src));
+}
+
+export async function onUploadBinary(ctx: WsViewContext, msg: Phx.Msg<Buffer>): Promise<PhxReply.Reply[]> {
   // generate a random temp file path
-  // TODO fixME
-  const fileSystem: any = {};
-  const randomTempFilePath = fileSystem.tempPath(randomUUID());
+  const randomTempFilePath = tempPath(randomUUID());
 
   const [joinRef, msgRef, topic, event, payload] = msg;
 
-  //TODO: write temp file
-  fileSystem.writeTempFile(randomTempFilePath, payload);
+  writeTempFile(randomTempFilePath, payload);
   // console.log("wrote temp file", randomTempFilePath, header.length, `"${header.toString()}"`);
 
   // split topic to get uploadRef
   const ref = topic.split(":")[1];
 
   // get activeUploadConfig by this.activeUploadRef
-  const activeUploadConfig: UploadConfig | undefined = Object.values(ctx.uploadConfigs).find((c) => c.ref === ctx.activeUploadRef);
+  const activeUploadConfig = Object.values(ctx.uploadConfigs).find((c) => c.ref === ctx.activeUploadRef);
   if (activeUploadConfig) {
     // find entry from topic ref
-    const entry = activeUploadConfig.entries.find((e) => e.ref === ref);
+    const entry = activeUploadConfig.entries.find((e) => e.ref === ref) as DefaultUploadEntry;
     if (!entry) {
       // istanbul ignore next
       throw Error(`Could not find entry for ref ${ref} in uploadConfig ${JSON.stringify(activeUploadConfig)}`);
     }
 
     // use fileSystemAdaptor to get path to a temp file
-    const entryTempFilePath = fileSystem.tempPath(entry.uuid);
+    const entryTempFilePath = tempPath(entry.uuid);
     // create or append to entry's temp file
-    fileSystem.createOrAppendFile(entryTempFilePath, randomTempFilePath);
+    createOrAppendFile(entryTempFilePath, randomTempFilePath);
     // tell the entry where it's temp file is
     entry.setTempFile(entryTempFilePath);
   }
@@ -65,10 +77,7 @@ export async function onUploadBinary(
   return replies;
 }
 
-export async function onProgressUpload(
-  ctx: WsViewContext,
-  payload: Phx.ProgressUploadPayload
-): Promise<Template> {
+export async function onProgressUpload(ctx: WsViewContext, payload: Phx.ProgressUploadPayload): Promise<Template> {
   const { ref, entry_ref, progress } = payload;
   // console.log("onProgressUpload handle", ref, entry_ref, progress);
 
@@ -77,7 +86,7 @@ export async function onProgressUpload(
   if (uploadConfig) {
     uploadConfig.entries = uploadConfig.entries.map((entry) => {
       if (entry.ref === entry_ref) {
-        entry.updateProgress(progress);
+        (entry as DefaultUploadEntry).updateProgress(progress);
       }
       return entry;
     });
@@ -87,7 +96,7 @@ export async function onProgressUpload(
     console.error("Received progress upload but could not find upload config for ref", ref);
   }
 
-  return await ctx.view.render();
+  return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
 }
 
 export type AllowUploadEntries = { [key: string]: string };
@@ -96,10 +105,7 @@ export type AllowUploadResult = {
   config: UploadConfig;
   view: Template;
 };
-export async function onAllowUpload(
-  ctx: WsViewContext,
-  payload: Phx.AllowUploadPayload
-): Promise<AllowUploadResult> {
+export async function onAllowUpload(ctx: WsViewContext, payload: Phx.AllowUploadPayload): Promise<AllowUploadResult> {
   const { ref, entries } = payload;
 
   ctx.activeUploadRef = ref;
@@ -122,7 +128,7 @@ export async function onAllowUpload(
     }
   });
 
-  const view = await ctx.view.render();
+  const view = await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
   return {
     entries: entriesReply,
     config: uc,

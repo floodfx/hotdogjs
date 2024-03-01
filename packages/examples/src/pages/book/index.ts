@@ -3,7 +3,7 @@ import { Form, ZodForm } from "hotdogjs-form";
 import { form_for } from "tags/form_for";
 import { error_tag, text_input } from "tags/inputs";
 import { submit } from "tags/submit";
-import BookDB, { Book, BookSchema } from "./db";
+import BookDB, { Book, BookSchema } from "../../db/book_db";
 
 type Events =
   | { type: "save"; name: string; author: string }

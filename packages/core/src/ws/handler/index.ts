@@ -1,5 +1,5 @@
 import { FileSystemRouter, ServerWebSocket } from "bun";
-import { AnyEvent, AnyPushEvent, Event, MountEvent, View, WsViewContext } from "index";
+import { AnyEvent, AnyPushEvent, Event, MountEvent, RenderMeta, View, WsViewContext } from "index";
 import { deepDiff } from "template/diff";
 import { Template, Tree, safe } from "../../template";
 import { PhxJoinPayload } from "../protocol/payloads";
@@ -157,12 +157,11 @@ export class WsHandler<T> {
             const url = new URL((urlString || redirectString)!);
 
             // route to the LiveView based on the URL
-            const matchResult = this.#router.match(url.pathname);
+            const matchResult = this.#router.match(url.toString());
             if (!matchResult) {
               throw Error(`no LiveView found for ${url}`);
             }
             const { default: View } = await import(matchResult.filePath);
-            console.log("WS View", View);
             const view = new View() as View<AnyEvent>;
 
             // extract params, session and socket from payload
@@ -197,7 +196,7 @@ export class WsHandler<T> {
 
             await view.mount(this.#ctx!, mountParams);
             await view.handleParams(this.#ctx!, url);
-            const tmpl = await view.render();
+            const tmpl = await view.render(this.meta());
 
             // convert the view into a parts tree
             const parts = await this.templateParts(tmpl);
@@ -246,7 +245,7 @@ export class WsHandler<T> {
             const payload = msg[Phx.MsgIdx.payload] as AnyEvent;
             // lifecycle handleInfo => render
             await this.#ctx!.view.handleEvent(this.#ctx!, payload);
-            const view = await this.#ctx!.view.render();
+            const view = await this.#ctx!.view.render(this.meta());
             const diff = await this.viewToDiff(view);
             this.send(PhxReply.diff(null, this.#ctx!.joinId, diff));
             this.cleanupPostReply();
@@ -274,7 +273,7 @@ export class WsHandler<T> {
               const url = new URL((payload as Phx.LivePatchPayload).url);
               this.#ctx!.url = url;
               await this.#ctx!.view.handleParams(this.#ctx!, this.#ctx!.url);
-              const view = await this.#ctx!.view.render();
+              const view = await this.#ctx!.view.render(this.meta());
               const diff = await this.viewToDiff(view);
               this.send(PhxReply.diffReply(msg, diff));
               this.cleanupPostReply();
@@ -574,6 +573,13 @@ export class WsHandler<T> {
       info = { type: info };
     }
     this.handleMsg([null, null, this.#ctx!.joinId, "info", info] as Phx.Msg);
+  }
+
+  meta(): RenderMeta {
+    return {
+      csrfToken: this.#csrfToken,
+      uploads: this.#ctx!.uploadConfigs,
+    };
   }
 
   // liveview socket methods

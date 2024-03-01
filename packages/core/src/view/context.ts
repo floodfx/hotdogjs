@@ -1,7 +1,8 @@
 import { ServerWebSocket } from "bun";
 import { Tree } from "template";
 import { WsHandler } from "ws/handler";
-import { UploadConfig } from "ws/handler/uploadConfig";
+import { UploadConfig, UploadConfigOptions } from "ws/handler/uploadConfig";
+import { DefaultUploadEntry, UploadEntry } from "ws/handler/uploadEntry";
 import { AnyEvent, AnyPushEvent, View, ViewEvent } from "./view";
 
 export type Event<E extends ViewEvent> = E["type"] | E;
@@ -77,50 +78,48 @@ export interface ViewContext<E extends ViewEvent> {
    */
   subscribe(event: E["type"]): void | Promise<void>;
   publish(event: Event<E>): void | Promise<void>;
-  // /**
-  //  * Allows file uploads for the given `LiveView`and configures the upload
-  //  * options (filetypes, size, etc).
-  //  * @param name the name of the upload
-  //  * @param options the options for the upload (optional)
-  //  */
-  // allowUpload(name: string, options?: UploadConfigOptions): Promise<void>;
-  // /**
-  //  * Cancels the file upload for a given UploadConfig by config name and file ref.
-  //  * @param name the name of the upload from which to cancel
-  //  * @param ref the ref of the upload entry to cancel
-  //  */
-  // cancelUpload(configName: string, ref: string): Promise<void>;
-  // /**
-  //  * Consume the uploaded files for a given UploadConfig (by name). This
-  //  * should only be called after the form's "save" event has occurred which
-  //  * guarantees all the files for the upload have been fully uploaded.
-  //  * @param name the name of the upload from which to consume
-  //  * @param fn the callback to run for each entry
-  //  * @returns an array of promises based on the return type of the callback function
-  //  * @throws if any of the entries are not fully uploaded (i.e. completed)
-  //  */
-  // consumeUploadedEntries<T>(
-  //   configName: string,
-  //   fn: (meta: ConsumeUploadedEntriesMeta, entry: UploadEntry) => Promise<T>
-  // ): Promise<T[]>;
-  // /**
-  //  * Returns two sets of files that are being uploaded, those `completed` and
-  //  * those `inProgress` for a given UploadConfig (by name).  Unlike `consumeUploadedEntries`,
-  //  * this does not require the form's "save" event to have occurred and will not
-  //  * throw if any of the entries are not fully uploaded.
-  //  * @param name the name of the upload from which to get the entries
-  //  * @returns an object with `completed` and `inProgress` entries
-  //  */
-  // uploadedEntries(configName: string): Promise<{
-  //   completed: UploadEntry[];
-  //   inProgress: UploadEntry[];
-  // }>;
+  /**
+   * Allows file uploads for the given `LiveView`and configures the upload
+   * options (filetypes, size, etc).
+   * @param name the name of the upload
+   * @param options the options for the upload (optional)
+   */
+  allowUpload(name: string, options?: UploadConfigOptions): void;
+  /**
+   * Cancels the file upload for a given UploadConfig by config name and file ref.
+   * @param name the name of the upload from which to cancel
+   * @param ref the ref of the upload entry to cancel
+   */
+  cancelUpload(configName: string, ref: string): void;
+  /**
+   * Consume the uploaded files for a given UploadConfig (by name). This
+   * should only be called after the form's "save" event has occurred which
+   * guarantees all the files for the upload have been fully uploaded.
+   * @param name the name of the upload from which to consume
+   * @param fn the callback to run for each entry
+   * @returns an array of promises based on the return type of the callback function
+   * @throws if any of the entries are not fully uploaded (i.e. completed)
+   */
+  consumeUploadedEntries<T>(configName: string, fn: (path: string, entry: UploadEntry) => Promise<T>): Promise<T[]>;
+  /**
+   * Returns two sets of files that are being uploaded, those `completed` and
+   * those `inProgress` for a given UploadConfig (by name).  Unlike `consumeUploadedEntries`,
+   * this does not require the form's "save" event to have occurred and will not
+   * throw if any of the entries are not fully uploaded.
+   * @param name the name of the upload from which to get the entries
+   * @returns an object with `completed` and `inProgress` entries
+   */
+  uploadedEntries(configName: string): {
+    completed: UploadEntry[];
+    inProgress: UploadEntry[];
+  };
 }
 
 export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewContext<E> {
   #id: string;
   #url: URL;
   #redirect: { to: string; replace: boolean } | undefined;
+  uploadConfigs: { [key: string]: UploadConfig } = {};
 
   constructor(id: string, url: URL) {
     this.#id = id;
@@ -165,29 +164,27 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
   publish(event: Event<E>): void | Promise<void> {
     // noop
   }
-  // allowUpload(name: string, options?: UploadConfigOptions): Promise<void> {
-  //   // no-op
-  //   // istanbul ignore next
-  //   return Promise.resolve();
-  // }
-  // cancelUpload(configName: string, ref: string): Promise<void> {
-  //   // no-op
-  //   // istanbul ignore next
-  //   return Promise.resolve();
-  // }
-  // consumeUploadedEntries<T>(
-  //   configName: string,
-  //   fn: (meta: ConsumeUploadedEntriesMeta, entry: UploadEntry) => Promise<T>
-  // ): Promise<T[]> {
-  //   // no-op
-  //   // istanbul ignore next
-  //   return Promise.resolve([]);
-  // }
-  // uploadedEntries(configName: string): Promise<{ completed: UploadEntry[]; inProgress: UploadEntry[] }> {
-  //   // no-op
-  //   // istanbul ignore next
-  //   return Promise.resolve({ completed: [], inProgress: [] });
-  // }
+  allowUpload(name: string, options?: UploadConfigOptions): Promise<void> {
+    // no-op
+    // istanbul ignore next
+    this.uploadConfigs[name] = new UploadConfig(name, options);
+    return Promise.resolve();
+  }
+  cancelUpload(configName: string, ref: string): Promise<void> {
+    // no-op
+    // istanbul ignore next
+    return Promise.resolve();
+  }
+  consumeUploadedEntries<T>(configName: string, fn: (path: string, entry: UploadEntry) => Promise<T>): Promise<T[]> {
+    // no-op
+    // istanbul ignore next
+    return Promise.resolve([]);
+  }
+  uploadedEntries(configName: string): { completed: UploadEntry[]; inProgress: UploadEntry[] } {
+    // no-op
+    // istanbul ignore next
+    return { completed: [], inProgress: [] };
+  }
 }
 
 export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContext<E> {
@@ -230,6 +227,58 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
     // this.#sessionData = sessionData;
     // this.#flash = flash;
     // this.components = new LiveComponentsContext(joinId, onSendInfo, onPushEvent);
+  }
+  allowUpload(name: string, options?: any) {
+    this.uploadConfigs[name] = new UploadConfig(name, options);
+  }
+  cancelUpload(configName: string, ref: string) {
+    const uploadConfig = this.uploadConfigs[configName];
+    if (uploadConfig) {
+      uploadConfig.removeEntry(ref);
+    } else {
+      // istanbul ignore next
+      console.warn(`Upload config ${configName} not found for cancelUpload`);
+    }
+  }
+  async consumeUploadedEntries<T>(
+    configName: string,
+    fn: (path: string, entry: UploadEntry) => Promise<T>
+  ): Promise<T[]> {
+    const uploadConfig = this.uploadConfigs[configName];
+    if (uploadConfig) {
+      const inProgress = uploadConfig.entries.some((entry) => !entry.done);
+      if (inProgress) {
+        throw new Error("Cannot consume entries while uploads are still in progress");
+      }
+      // noting is in progress so we can consume
+      const entries = uploadConfig.consumeEntries();
+      return await Promise.all(
+        entries.map(async (entry) => await fn((entry as DefaultUploadEntry).getTempFile()!, entry))
+      );
+    }
+    console.warn(`Upload config ${configName} not found for consumeUploadedEntries`);
+    return [];
+  }
+  uploadedEntries(configName: string): { completed: UploadEntry[]; inProgress: UploadEntry[] } {
+    const completed: UploadEntry[] = [];
+    const inProgress: UploadEntry[] = [];
+    const uploadConfig = this.uploadConfigs[configName];
+    if (uploadConfig) {
+      uploadConfig.entries.forEach((entry) => {
+        if (entry.done) {
+          completed.push(entry);
+        } else {
+          inProgress.push(entry);
+        }
+      });
+    } else {
+      // istanbul ignore next
+      console.warn(`Upload config ${configName} not found for uploadedEntries`);
+    }
+    return {
+      completed,
+      inProgress,
+    };
   }
 
   get id(): string {

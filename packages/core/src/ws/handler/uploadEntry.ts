@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { mime } from "mime";
+import { readFileSync } from "node:fs";
 import { PhxEventUpload } from "../protocol/payloads";
 import { UploadConfig } from "./uploadConfig";
 
@@ -59,12 +60,14 @@ export interface UploadEntry {
    * Errors that have occurred during selection or upload.
    */
   errors: string[];
+
+  readonly data: Buffer;
 }
 
 /**
  * UploadEntry represents a file and related metadata selected for upload
  */
-export class UploadEntry {
+export class DefaultUploadEntry implements UploadEntry {
   #config: UploadConfig; // the parent upload config
   #tempFile?: string; // the temp file location where the file is stored
 
@@ -85,6 +88,19 @@ export class UploadEntry {
     this.#config = config;
     this.validate();
   }
+  cancelled: boolean;
+  last_modified: number;
+  name: string;
+  size: number;
+  type: string;
+  done: boolean;
+  preflighted: boolean;
+  progress: number;
+  ref: string;
+  upload_ref: string;
+  uuid: string;
+  valid: boolean;
+  errors: string[];
 
   /**
    * Takes in a progress percentage and updates the entry accordingly
@@ -156,5 +172,12 @@ export class UploadEntry {
    */
   getTempFile() {
     return this.#tempFile;
+  }
+
+  get data() {
+    if (!this.done) {
+      return Buffer.from([]);
+    }
+    return readFileSync(this.#tempFile!);
   }
 }
