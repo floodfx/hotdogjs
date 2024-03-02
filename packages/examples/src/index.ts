@@ -2,31 +2,47 @@ import { BunFile } from "bun";
 import { randomUUID } from "crypto";
 import { HotPage, WsHandler } from "hotdogjs-core";
 
+console.log("Bun.main", Bun.main, process.cwd());
+
 type HotdogConf = {
   /**
-   * The directory where static files are served from.
-   * Defaults to "public"
+   * Directory where static files are served from and client js is built to.
+   * Note: this is relative to process.cwd()
+   * Defaults to "/public"
    */
   publicDir: string;
   /**
-   * The directory where uploads are stored.
-   * Defaults to "uploads"
+   * Directory where hotdogjs pages are served from.
+   * Note: this is relative to process.cwd()
+   * Defaults to "/src/pages"
    */
-  uploadDir: string;
+  pagesDir: string;
+  /**
+   * File where the hotdogjs client side code is located.
+   * Note: this is relative to process.cwd()
+   * Defaults to "/src/client/app.ts"
+   */
+  clientFile: string;
 };
 
 // load hotdog.toml
+const cwd = process.cwd();
+let hdconf: HotdogConf = {
+  publicDir: cwd + "/public",
+  pagesDir: cwd + "/src/pages",
+  clientFile: cwd + "/src/client/app.ts",
+};
 try {
-  const hdconf = await import("../hotdog.toml");
+  hdconf = await import(cwd + "/hotdog.toml");
+} finally {
+  // ignore
   console.log("hdconf", hdconf);
-} catch (e) {
-  console.warn("no hdconf");
 }
 
 // build clientjs
 Bun.build({
-  entrypoints: [import.meta.dir + "/client/app.ts"],
-  outdir: import.meta.dir + "/../public/js",
+  entrypoints: [hdconf.clientFile],
+  outdir: hdconf.publicDir + "/js",
 });
 
 // load public/index.html
@@ -46,24 +62,20 @@ type HotdogInfo = {
   wsHandler: WsHandler<any>;
 };
 
-console.log("process.env.MY_FOO", process.env.MY_FOO);
-
 const server = Bun.serve<HotdogInfo>({
   async fetch(req, server) {
     const url = new URL(req.url);
-    // static files
+    // look for static routes first, e.g. /public/js/app.js
     const s = staticFile(url);
     if (s) {
       return new Response(s);
     }
 
-    // page routes
-    const m = router.match(req);
-    if (m) {
-      // handle http live view
-      console.log("match", m);
+    // handle hotdogjs page routes
+    const matchedRoute = router.match(req);
+    if (matchedRoute) {
       const csrfToken = randomUUID();
-      const res = await HotPage(m, req, indexHtmlFile, { csrfToken });
+      const res = await HotPage(matchedRoute, req, indexHtmlFile, { csrfToken });
       if (res instanceof Response) {
         return res;
       }
@@ -75,7 +87,7 @@ const server = Bun.serve<HotdogInfo>({
       });
     }
 
-    // websocket routes
+    // hotdogjs websocket routes
     if (url.pathname === "/live/websocket") {
       // get csrf token from cookie
       const csrfToken = req.headers
@@ -83,14 +95,13 @@ const server = Bun.serve<HotdogInfo>({
         ?.split(/;\s+/)
         .find((c) => c.startsWith("csrf_token="))
         ?.split("=")[1];
-      console.log("csrfToken", csrfToken);
       const success = server.upgrade(req, {
         data: {
           csrfToken,
         },
       });
       if (success) {
-        return undefined;
+        return new Response("Upgraded", { status: 101 });
       }
       throw new Error(`Failed to upgrade socket request: ${req}`);
     }
@@ -123,7 +134,12 @@ const server = Bun.serve<HotdogInfo>({
 // start with those directories.  Or do we include everything other
 // thank index.html?  Should it be hotdog.html instead of index.html?
 function staticFile(url: URL): BunFile | null {
+  // skip non-static files
   if (!url.pathname.startsWith("/static/")) {
+    return null;
+  }
+  // skip /static/index.html since it is a template
+  if (url.pathname === "/static/index.html") {
     return null;
   }
   let name = url.pathname.split("/").slice(2).join("/");

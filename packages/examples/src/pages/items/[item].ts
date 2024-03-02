@@ -7,7 +7,7 @@ type Events =
     }
   | {
       type: "my_other_event";
-      something: string;
+      differentThing: string;
     }
   | {
       type: "only_type";
@@ -28,7 +28,7 @@ export default class ItemView extends BaseView<Events> {
         break;
       }
       case "my_other_event": {
-        console.log("my_other_event", e.something);
+        console.log("my_other_event", e.differentThing);
         break;
       }
       case "only_type": {
