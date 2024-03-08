@@ -215,5 +215,5 @@ export abstract class BaseView<E extends ViewEvent> implements View<E, Template>
     });
   }
 
-  abstract render(meta: RenderMeta): Template;
+  abstract render(meta: RenderMeta): Template | Promise<Template>;
 }
