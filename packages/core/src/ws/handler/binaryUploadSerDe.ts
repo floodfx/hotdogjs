@@ -1,7 +1,7 @@
 import { Phx } from "../protocol/phx";
 
 /**
- * BinaryUploadSerDe is a serializer/deserializer for binary (file) uploads from LiveViews.
+ * BinaryUploadSerDe is a serializer/deserializer for binary (file) uploads from Views.
  */
 export class BinaryUploadSerDe {
   /**

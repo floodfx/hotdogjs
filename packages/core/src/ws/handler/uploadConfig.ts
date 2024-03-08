@@ -7,7 +7,7 @@ import { UploadEntry } from "./uploadEntry";
 export interface UploadConfig {
   /**
    * The name of the upload config to be used in the `allowUpload` and `uploadedEntries` methods.
-   * should be unique per LiveView.
+   * should be unique per View.
    */
   name: string;
   /**

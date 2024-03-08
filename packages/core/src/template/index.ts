@@ -53,20 +53,19 @@ export function escapehtml(unsafe: unknown): string {
 export type Tree = { [key: string]: unknown };
 
 /**
- * Template is what a `LiveView` returns from its `render` function.
- * It is based on "tagged template literals" and is what allows LiveViewJS
+ * Template is what a `View` returns from its `render` function.
+ * It is based on "tagged template literals" and is what allows the framework
  * to minimize the amount of data sent to the client.
  */
 export class Template {
   readonly statics: readonly string[];
   readonly dynamics: readonly unknown[];
-  readonly isLiveComponent: boolean = false;
-  // readonly children: readonly Template[]
+  readonly isComponent: boolean = false;
 
-  constructor(statics: readonly string[], dynamics: readonly unknown[], isLiveComponent: boolean = false) {
+  constructor(statics: readonly string[], dynamics: readonly unknown[], isComponent: boolean = false) {
     this.statics = statics;
     this.dynamics = dynamics;
-    this.isLiveComponent = isLiveComponent;
+    this.isComponent = isComponent;
   }
 
   toTree(includeStatics: boolean = true): Tree {
@@ -90,17 +89,16 @@ export class Template {
     const tree = this.dynamics.reduce((acc: Tree, cur: unknown, index: number) => {
       if (cur instanceof Template) {
         // handle isLiveComponent case
-        if (cur.isLiveComponent) {
-          // for live components, we only send back a number which
+        if (cur.isComponent) {
+          // for `Components`, we only send back a number which
           // is the index of the component in the `c` key
           // the `c` key is added to the parts tree by the
-          // ComponentManager when it renders the `LiveView`
           return {
             ...acc,
             [`${index}`]: Number(cur.statics[0]),
           };
         } else {
-          // this isn't a live component, so we need to contine walking
+          // this isn't a Component, so we need to contine walking
           // the parts tree for this Template including to the children
 
           // check if parts only has a single static string
@@ -143,16 +141,16 @@ export class Template {
           } else if (cur[0] instanceof Template) {
             // if any of the children are live components, then we assume they all are
             // and do not return the statics for this array
-            let isLiveComponentArray = false;
+            let isComponentArray = false;
             d = cur.map((c: Template) => {
-              if (c.isLiveComponent) {
-                isLiveComponentArray = true;
+              if (c.isComponent) {
+                isComponentArray = true;
                 return [Number(c.statics[0])];
               } else {
                 return Object.values(c.toTree(false));
               }
             });
-            if (isLiveComponentArray) {
+            if (isComponentArray) {
               return {
                 ...acc,
                 [`${index}`]: { d },
@@ -191,6 +189,10 @@ export class Template {
     return tree;
   }
 
+  /**
+   * toString returns an HTML escaped string representation of the Template.
+   * @returns an HTML escaped string representation of the Template
+   */
   toString(): string {
     return this.statics.reduce((result, s, i) => {
       const d = this.dynamics[i - 1];
@@ -199,6 +201,13 @@ export class Template {
   }
 }
 
+/**
+ * Creates a Template from a tagged template literal escaping unsafe HTML characters.
+ * This is the main way to create a Template.
+ * @param statics the static strings from the template literal
+ * @param dynamics the dynamic values from the template literal
+ * @returns a new Template
+ */
 export function html(statics: TemplateStringsArray, ...dynamics: unknown[]) {
   return new Template(statics, dynamics);
 }
@@ -207,8 +216,14 @@ export function html(statics: TemplateStringsArray, ...dynamics: unknown[]) {
  * Creates a Template from a template string and object.
  * This allows templates to be loaded directly from a file or other
  * source not typically supported by tagged template literals.
+ * @param template the template string
+ * @param data the data to use for the dynamic values
+ * @returns a new Template from the template string and object
  */
-export function templateFromString(template: string, vars: any): Template {
-  const func = new Function(...Object.keys(vars), "html", "return html`" + template + "`;");
-  return func(...Object.values(vars), html);
+export function templateFromString(template: string, data: any): Template {
+  // first we make a new Function with the keys of the data object and
+  // the template string.  Then we call the function with the values of the
+  // data object and the html function to get the result.
+  const func = new Function(...Object.keys(data), "html", "return html`" + template + "`;");
+  return func(...Object.values(data), html);
 }
