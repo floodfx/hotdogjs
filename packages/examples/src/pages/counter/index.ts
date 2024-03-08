@@ -13,7 +13,6 @@ export default class Counter extends BaseView<Event> {
   }
 
   handleEvent(ctx: ViewContext<Event>, event: Event) {
-    console.log("handleEvent", event);
     switch (event.type) {
       case "inc":
         this.count++;

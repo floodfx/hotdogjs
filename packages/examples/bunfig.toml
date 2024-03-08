@@ -1,0 +1,5 @@
+# jsx2ttl isn't quite working yet so we're not using it
+# preload = ["./src/plugin/index.ts"]
+
+[test]
+# preload = ["./src/plugin/index.ts"]
