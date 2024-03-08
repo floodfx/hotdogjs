@@ -1,4 +1,4 @@
-import { html, safe } from "hotdogjs-core";
+import { BaseComponent, html, safe } from "hotdogjs-core";
 import { Form } from "hotdogjs-form";
 
 interface InputOptions {
@@ -20,6 +20,24 @@ export const text_input = <T>(form: Form<T>, key: keyof T, options?: InputOption
   // prettier-ignore
   return html`<input type="${type}" id="${id}" name="${String(key)}" value="${value}"${className}${autocomplete}${placeholder}${phx_debounce}/>`;
 };
+
+export class TextInput<T> extends BaseComponent {
+  #form: Form<T>;
+  #key: keyof T;
+  #options?: InputOptions;
+
+  constructor(id: string, form: Form<T>, key: keyof T, options?: InputOptions) {
+    super();
+    this.id = id;
+    this.#form = form;
+    this.#key = key;
+    this.#options = options;
+  }
+
+  render() {
+    return text_input(this.#form, this.#key, this.#options);
+  }
+}
 
 interface TelephoneInputOptions extends Omit<InputOptions, "type"> {}
 
