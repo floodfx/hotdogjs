@@ -1,5 +1,15 @@
 import { FileSystemRouter, ServerWebSocket } from "bun";
-import { AnyEvent, AnyPushEvent, Event, MountEvent, RenderMeta, View, WsViewContext } from "index";
+import {
+  AnyEvent,
+  AnyPushEvent,
+  Event,
+  MountEvent,
+  RenderMeta,
+  WsViewContext,
+  type BaseView,
+  type ComponentContext,
+  type ViewContext,
+} from "index";
 import { deepDiff } from "template/diff";
 import { Template, Tree, safe } from "../../template";
 import { PhxJoinPayload } from "../protocol/payloads";
@@ -7,80 +17,79 @@ import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
 import { handleEvent } from "./event";
 import { onAllowUpload, onProgressUpload, onUploadBinary } from "./upload";
-import { UploadConfig } from "./uploadConfig";
 // import { LiveComponentsContext } from "./wsLiveComponents";
 
-export class WsHandlerContext {
-  #view: View<AnyEvent>;
-  #joinId: string;
-  #csrfToken: string;
-  #pageTitle?: string;
-  #pageTitleChanged: boolean = false;
-  // #flash: FlashAdaptor;
-  // #sessionData: SessionData;
-  // components: LiveComponentsContext;
-  url: URL;
-  pushEvents: AnyPushEvent[] = [];
-  activeUploadRef: string | null = null;
-  uploadConfigs: { [key: string]: UploadConfig } = {};
-  parts: Tree = {};
+// export class WsHandlerContext {
+//   #view: View<AnyEvent, Template>;
+//   #joinId: string;
+//   #csrfToken: string;
+//   #pageTitle?: string;
+//   #pageTitleChanged: boolean = false;
+//   // #flash: FlashAdaptor;
+//   // #sessionData: SessionData;
+//   // components: LiveComponentsContext;
+//   url: URL;
+//   pushEvents: AnyPushEvent[] = [];
+//   activeUploadRef: string | null = null;
+//   uploadConfigs: { [key: string]: UploadConfig } = {};
+//   parts: Tree = {};
 
-  constructor(
-    view: View<AnyEvent>,
-    joinId: string,
-    csrfToken: string,
-    url: URL,
-    // sessionData: SessionData,
-    // flash: FlashAdaptor,
-    onSendInfo: (event: Event<AnyEvent>) => void,
-    onPushEvent: (event: AnyPushEvent) => void
-  ) {
-    this.#view = view;
-    this.#joinId = joinId;
-    this.#csrfToken = csrfToken;
-    this.url = url;
-    // this.#sessionData = sessionData;
-    // this.#flash = flash;
-    // this.components = new LiveComponentsContext(joinId, onSendInfo, onPushEvent);
-  }
+//   constructor(
+//     view: View<AnyEvent, Template>,
+//     joinId: string,
+//     csrfToken: string,
+//     url: URL,
+//     // sessionData: SessionData,
+//     // flash: FlashAdaptor,
+//     onSendInfo: (event: Event<AnyEvent>) => void,
+//     onPushEvent: (event: AnyPushEvent) => void
+//   ) {
+//     this.#view = view;
+//     this.#joinId = joinId;
+//     this.#csrfToken = csrfToken;
+//     this.url = url;
+//     // this.#sessionData = sessionData;
+//     // this.#flash = flash;
+//     // this.components = new LiveComponentsContext(joinId, onSendInfo, onPushEvent);
+//   }
 
-  get view() {
-    return this.#view;
-  }
+//   get view() {
+//     return this.#view;
+//   }
 
-  get joinId() {
-    return this.#joinId;
-  }
+//   get joinId() {
+//     return this.#joinId;
+//   }
 
-  get csrfToken() {
-    return this.#csrfToken;
-  }
+//   get csrfToken() {
+//     return this.#csrfToken;
+//   }
 
-  set pageTitle(newTitle: string) {
-    if (this.#pageTitle !== newTitle) {
-      this.#pageTitle = newTitle;
-      this.#pageTitleChanged = true;
-    }
-  }
+//   set pageTitle(newTitle: string) {
+//     if (this.#pageTitle !== newTitle) {
+//       this.#pageTitle = newTitle;
+//       this.#pageTitleChanged = true;
+//     }
+//   }
 
-  get hasPageTitleChanged() {
-    return this.#pageTitleChanged;
-  }
+//   get hasPageTitleChanged() {
+//     return this.#pageTitleChanged;
+//   }
 
-  get pageTitle() {
-    this.#pageTitleChanged = false;
-    return this.#pageTitle ?? "";
-  }
+//   get pageTitle() {
+//     this.#pageTitleChanged = false;
+//     return this.#pageTitle ?? "";
+//   }
 
-  // get sessionData() {
-  //   return this.#sessionData;
-  // }
+//   // get sessionData() {
+//   //   return this.#sessionData;
+//   // }
 
-  clearFlash(key: string) {
-    console.log("TODO: clearFlash");
-    // return this.#flash.clearFlash(this.#sessionData, key);
-  }
-}
+//   clearFlash(key: string) {
+//     console.log("TODO: clearFlash");
+//     // return this.#flash.clearFlash(this.#sessionData, key);
+//   }
+// }
 
 type WsHandlerOptions = {
   wrapperTemplateFn?: (tmpl: Template) => Template;
@@ -88,6 +97,11 @@ type WsHandlerOptions = {
   debug?: (msg: string) => void;
 };
 
+/**
+ * WsHandler contains the connection to the websocket and is responsible for
+ * managing the lifecycle of the View and any Components that are
+ * part of the View.
+ */
 export class WsHandler<T> {
   #ws: ServerWebSocket<T>;
   #wrapperTemplateFn?: (tmpl: Template) => Template;
@@ -101,6 +115,7 @@ export class WsHandler<T> {
   #subscriptionIds: { [key: string]: string } = {};
   #lastHB?: number;
   #hbInterval?: ReturnType<typeof setInterval>;
+  // #components;
 
   constructor(ws: ServerWebSocket<T>, router: FileSystemRouter, csrfToken: string, options?: WsHandlerOptions) {
     this.#ws = ws;
@@ -121,7 +136,7 @@ export class WsHandler<T> {
 
   /**
    * handleMsg is the main entry point for handling messages from both the websocket
-   * and internal messages from the LiveView. It is responsible for routing messages
+   * and internal messages from the View. It is responsible for routing messages
    * based on the message event and topic. It also handles queuing messages if a message
    * is already being processed since we want to ensure that messages are processed in order.
    * @param msg a Phx.Msg to be routed
@@ -142,8 +157,8 @@ export class WsHandler<T> {
       const topic = msg[Phx.MsgIdx.topic];
       switch (event) {
         case "phx_join":
-          // phx_join event used for both LiveView joins and LiveUpload joins
-          // check prefix of topic to determine if LiveView (lv:*) or LiveViewUpload (lvu:*)
+          // phx_join event used for both View joins and LiveUpload joins
+          // check prefix of topic to determine if View (lv:*) or LiveUpload (lvu:*)
           if (topic.startsWith("lv:")) {
             const payload = msg[Phx.MsgIdx.payload] as unknown as PhxJoinPayload;
 
@@ -156,13 +171,13 @@ export class WsHandler<T> {
             // checked one of these was defined in MessageRouter
             const url = new URL((urlString || redirectString)!);
 
-            // route to the LiveView based on the URL
+            // route to the View based on the URL
             const matchResult = this.#router.match(url.toString());
             if (!matchResult) {
-              throw Error(`no LiveView found for ${url}`);
+              throw Error(`no View found for ${url}`);
             }
             const { default: View } = await import(matchResult.filePath);
-            const view = new View() as View<AnyEvent>;
+            const view = new View() as BaseView<AnyEvent>;
 
             // extract params, session and socket from payload
             const { params: payloadParams, session: payloadSession, static: payloadStatic } = payload;
@@ -173,8 +188,8 @@ export class WsHandler<T> {
               return;
             }
 
-            // success! now let's initialize this liveview
-            // const socket = this.newSocket(topic, url);
+            // success! now let's initialize the ViewContext which stores
+            // the state and connection of the View
             this.#ctx = new WsViewContext(
               topic,
               url,
@@ -186,7 +201,7 @@ export class WsHandler<T> {
               this.handlePushEvent.bind(this)
             );
 
-            // run initial lifecycle steps for the liveview: mount => handleParams => render
+            // run initial lifecycle steps for the View: mount => handleParams => render
             const mountParams: MountEvent = {
               type: "mount",
               ...payloadParams,
@@ -198,12 +213,14 @@ export class WsHandler<T> {
             await view.handleParams(this.#ctx!, url);
             const tmpl = await view.render(this.meta());
 
+            // now preload components for the view just this once
+            view.__preloadComponents(this.#ctx!);
+
             // convert the view into a parts tree
             const parts = await this.templateParts(tmpl);
 
             // send the response and cleanup
             this.send(PhxReply.renderedReply(msg, parts));
-            this.cleanupPostReply();
             // start heartbeat interval
             this.#lastHB = Date.now();
             this.#hbInterval = setInterval(() => {
@@ -229,13 +246,10 @@ export class WsHandler<T> {
           try {
             const payload = msg[Phx.MsgIdx.payload] as Phx.EventPayload;
             let diff = await handleEvent(this.#ctx!, payload);
-            // check if diff is a LiveViewTemplate, if so, convert to a diff
-            // note: using HtmlSafeString because instanceof requires a class not an interface/alias
             if (diff instanceof Template) {
               diff = await this.viewToDiff(diff);
             }
             this.send(PhxReply.diffReply(msg, diff));
-            this.cleanupPostReply();
           } catch (e) {
             console.error("error handling event", e);
           }
@@ -248,7 +262,6 @@ export class WsHandler<T> {
             const view = await this.#ctx!.view.render(this.meta());
             const diff = await this.viewToDiff(view);
             this.send(PhxReply.diff(null, this.#ctx!.joinId, diff));
-            this.cleanupPostReply();
           } catch (e) {
             /* istanbul ignore next */
             console.error(`Error sending internal info`, e);
@@ -259,7 +272,7 @@ export class WsHandler<T> {
           const { to } = payload;
           // to is relative so need to provide the urlBase determined on initial join
           this.#ctx!.url = new URL(to, this.#ctx!.url);
-          // let the `LiveView` udpate its context based on the new url
+          // let the `View` udpate its context based on the new url
           await this.#ctx!.view.handleParams(this.#ctx!, this.#ctx!.url);
           // send the message on to the client
           this.send(msg as PhxReply.Reply);
@@ -276,13 +289,12 @@ export class WsHandler<T> {
               const view = await this.#ctx!.view.render(this.meta());
               const diff = await this.viewToDiff(view);
               this.send(PhxReply.diffReply(msg, diff));
-              this.cleanupPostReply();
             } else {
               // case 2: server-side live_patch
               const { to } = payload as Phx.LiveNavPushPayload;
               // to is relative so need to provide the urlBase determined on initial join
               this.#ctx!.url = new URL(to, this.#ctx!.url);
-              // let the `LiveView` udpate its context based on the new url
+              // let the `View` udpate its context based on the new url
               await this.#ctx!.view.handleParams(this.#ctx!, this.#ctx!.url);
               // send the message on to the client
               this.send(msg as PhxReply.Reply);
@@ -309,7 +321,6 @@ export class WsHandler<T> {
             const view = await onProgressUpload(this.#ctx!, payload);
             const diff = await this.viewToDiff(view);
             this.send(PhxReply.diffReply(msg, diff));
-            this.cleanupPostReply();
           } catch (e) {
             console.error("error handling progress", e);
           }
@@ -339,14 +350,14 @@ export class WsHandler<T> {
             console.error("error stopping heartbeat", e);
           }
           try {
-            // shutdown the liveview
+            // shutdown the View
             if (this.#ctx) {
               await this.#ctx.view.shutdown();
               // clear out the context
               this.#ctx = undefined;
             }
           } catch (e) {
-            console.error("error shutting down liveview:" + this.#ctx?.joinId, e);
+            console.error("error shutting down View:" + this.#ctx?.joinId, e);
           }
 
           try {
@@ -403,12 +414,12 @@ export class WsHandler<T> {
   }
 
   /**
-   * Check if the websocket is closed and if so, shutdown the liveview
+   * Check if the websocket is closed and if so, shutdown the View
    */
   private maybeShutdown() {
     // closing = 2, closed = 3
     if (this.#ws.readyState > 1) {
-      this.maybeDebug(`ws closed, shutting down liveview: ${this.#ctx?.joinId}`);
+      this.maybeDebug(`ws closed, shutting down View: ${this.#ctx?.joinId}`);
       this.close();
       return true;
     }
@@ -417,7 +428,7 @@ export class WsHandler<T> {
 
   /**
    * Call the config.onError callback on send errors and if the
-   * websocket is closed, shutdown the liveview
+   * websocket is closed, shutdown the View
    */
   private maybeHandleError(err: any) {
     this.maybeShutdown();
@@ -438,12 +449,6 @@ export class WsHandler<T> {
     }
   }
 
-  private async cleanupPostReply() {
-    // do post-send lifecycle step
-    // this.#ctx!.socket.updateContextWithTempAssigns();
-    console.log("TODO: cleanupPostReply");
-  }
-
   private async viewToDiff(tmpl: Template): Promise<Tree> {
     // wrap in root template if there is one
     tmpl = await this.maybeWrapView(tmpl);
@@ -455,20 +460,20 @@ export class WsHandler<T> {
     this.#ctx!.parts = newParts;
 
     // now add the components, events, and title parts
-    diff = this.maybeAddLiveComponentsToParts(diff);
+    diff = WsHandler.maybeAddLiveComponentsToParts(this.#ctx!.view, this.#ctx!, diff, false);
     diff = this.maybeAddEventsToParts(diff);
     return this.maybeAddTitleToView(diff);
   }
 
   private async templateParts(tmpl: Template): Promise<Tree> {
-    // step 1: if provided, wrap the rendered `LiveView` inside the root template
+    // step 1: if provided, wrap the rendered `View` inside the root template
     tmpl = await this.maybeWrapView(tmpl);
 
     // step 2: store parts for later diffing after rootTemplate is applied
     let parts = tmpl.toTree(true);
 
     // step 3: add any `LiveComponent` renderings to the parts tree
-    parts = this.maybeAddLiveComponentsToParts(parts);
+    parts = WsHandler.maybeAddLiveComponentsToParts(this.#ctx!.view, this.#ctx!, parts, true);
 
     // step 4: add any push events to the parts tree
     parts = this.maybeAddEventsToParts(parts);
@@ -517,24 +522,60 @@ export class WsHandler<T> {
     return tmpl;
   }
 
-  private maybeAddLiveComponentsToParts(parts: Tree) {
-    console.log("TODO: maybeAddLiveComponentsToParts");
-    return parts;
-    // const components = this.#ctx!.components.all();
-    // if (components.length === 0) {
-    //   return parts;
-    // }
-    // const cParts: Parts = {};
-    // // aggregate all the parts from the changed live components
-    // Object.values(components).forEach((lc) => {
-    //   const { cid, parts } = lc;
-    //   cParts[`${cid}`] = parts;
-    // });
-    // // update parts tree with the changed live components
-    // return {
-    //   ...parts,
-    //   c: cParts,
-    // };
+  static maybeAddLiveComponentsToParts(
+    view: BaseView<AnyEvent>,
+    vCtx: ViewContext<AnyEvent>,
+    parts: Tree,
+    mounting: boolean
+  ) {
+    const cs = view.__components;
+
+    // no components, return parts
+    if (cs.length === 0) {
+      return parts;
+    }
+
+    // otherwise, aggregate all the parts from the components
+    const tree: Tree = {};
+    view.__components = cs.map((c) => {
+      let ctx: ComponentContext<AnyEvent> = {
+        parentId: vCtx.id,
+        connected: vCtx.connected,
+        dispatchEvent: vCtx.dispatchEvent,
+        pushEvent: vCtx.pushEvent,
+      };
+      // now handle stateful or stateless components
+      if (c.id) {
+        // STATEFUL
+        if (mounting) {
+          c.mount(ctx);
+        }
+        // either we just mounted or are on a subsequent load
+        // and either case we continue with update => render
+        c.update(ctx);
+        const newTemplate = c.render();
+        tree[c.cid!] = newTemplate.toTree(true);
+        return c;
+      } else {
+        // STATELESS
+        if (c.handleEvent) {
+          console.warn(
+            `Component "${c.constructor}" has "handleEvent" defined but no "id" attribute so it cannot be targeted.`
+          );
+        }
+        // STATELESS components lifecycle is always:
+        // preload => mount => update => render
+        c.mount(ctx);
+        c.update(ctx);
+        tree[c.cid!] = c.render().toTree(true); // stateless components are always rendered
+        return c;
+      }
+    });
+    // update parts tree with the changed live components
+    return {
+      ...parts,
+      c: tree,
+    };
   }
 
   async pushNav(
@@ -581,98 +622,4 @@ export class WsHandler<T> {
       uploads: this.#ctx!.uploadConfigs,
     };
   }
-
-  // liveview socket methods
-  // TODO move this to context?
-  // private newSocket(joinId: string, url: URL) {
-  //   return new WsLiveViewSocket(
-  //     // id
-  //     joinId,
-  //     // url
-  //     url,
-  //     // pageTitleCallback
-  //     (newTitle: string) => {
-  //       this.#ctx!.pageTitle = newTitle;
-  //     },
-  //     // pushEventCallback
-  //     this.handlePushEvent.bind(this),
-  //     // pushPatchCallback
-  //     async (path, params, replace) => {
-  //       await this.pushNav("live_patch", path, params, replace);
-  //     },
-  //     // pushRedirectCallback
-  //     async (path, params, replace) => {
-  //       await this.pushNav("live_redirect", path, params, replace);
-  //     },
-  //     // putFlashCallback
-  //     async (key, value) => {
-  //       await this.#config.flashAdaptor.putFlash(this.#ctx!.sessionData, key, value);
-  //     },
-  //     // sendInfoCallback
-  //     this.handleSendInfo.bind(this),
-  //     // subscribeCallback
-  //     async (topic: string) => {
-  //       const subId = await this.#config.pubSub.subscribe<AnyLiveInfo>(topic, (info: AnyLiveInfo) => {
-  //         // dispatch as an "info" message
-  //         this.handleMsg([null, null, this.#ctx!.joinId, "info", info] as Phx.Msg);
-  //       });
-  //       this.#subscriptionIds[topic] = subId;
-  //     },
-  //     // allowUploadCallback
-  //     async (name, options) => {
-  //       this.#ctx!.uploadConfigs[name] = new UploadConfig(name, options);
-  //     },
-  //     // cancelUploadCallback
-  //     async (configName, ref) => {
-  //       const uploadConfig = this.#ctx!.uploadConfigs[configName];
-  //       if (uploadConfig) {
-  //         uploadConfig.removeEntry(ref);
-  //       } else {
-  //         // istanbul ignore next
-  //         console.warn(`Upload config ${configName} not found for cancelUpload`);
-  //       }
-  //     },
-  //     // consumeUploadedEntriesCallback
-  //     async <T>(configName: string, fn: (meta: ConsumeUploadedEntriesMeta, entry: UploadEntry) => Promise<T>) => {
-  //       const uploadConfig = this.#ctx!.uploadConfigs[configName];
-  //       if (uploadConfig) {
-  //         const inProgress = uploadConfig.entries.some((entry) => !entry.done);
-  //         if (inProgress) {
-  //           throw new Error("Cannot consume entries while uploads are still in progress");
-  //         }
-  //         // noting is in progress so we can consume
-  //         const entries = uploadConfig.consumeEntries();
-  //         return await Promise.all(
-  //           entries.map(
-  //             async (entry) => await fn({ path: entry.getTempFile(), fileSystem: this.#config.fileSysAdaptor }, entry)
-  //           )
-  //         );
-  //       }
-  //       console.warn(`Upload config ${configName} not found for consumeUploadedEntries`);
-  //       return [];
-  //     },
-  //     // uploadedEntriesCallback
-  //     async (configName) => {
-  //       const completed: UploadEntry[] = [];
-  //       const inProgress: UploadEntry[] = [];
-  //       const uploadConfig = this.#ctx!.uploadConfigs[configName];
-  //       if (uploadConfig) {
-  //         uploadConfig.entries.forEach((entry) => {
-  //           if (entry.done) {
-  //             completed.push(entry);
-  //           } else {
-  //             inProgress.push(entry);
-  //           }
-  //         });
-  //       } else {
-  //         // istanbul ignore next
-  //         console.warn(`Upload config ${configName} not found for uploadedEntries`);
-  //       }
-  //       return {
-  //         completed,
-  //         inProgress,
-  //       };
-  //     }
-  //   );
-  // }
 }

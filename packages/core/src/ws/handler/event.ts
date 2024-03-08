@@ -1,4 +1,4 @@
-import { WsViewContext } from "index";
+import { WsViewContext, type ComponentContext } from "index";
 import { Template, Tree } from "template";
 import { Phx } from "../protocol/phx";
 import { DefaultUploadEntry } from "./uploadEntry";
@@ -44,7 +44,7 @@ type FocusPayload = Phx.EventPayload<"focus", { value: string }>;
 type BlurPayload = Phx.EventPayload<"blur", { value: string }>;
 
 // Hook event
-// initiated by calling this.pushEvent("edit"...) in client hook in liveview.js
+// initiated by calling this.pushEvent("edit"...) in client javascript
 // {type: "hook", event: "edit", value: {id: "abc"}}
 type HookPayload = Phx.EventPayload<"hook", Record<string, string>>;
 
@@ -73,7 +73,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
           }
         } else {
           console.warn(
-            `Warning: form event data missing _csrf_token value. \nConsider passing it in via a hidden input named "_csrf_token".  \nYou can get the value from the LiveViewMeta object passed the render method. \n`
+            `Warning: form event data missing _csrf_token value. \nConsider passing it in via a hidden input named "_csrf_token".  \nYou can get the value from the Meta object passed the render method. \n`
           );
         }
 
@@ -112,16 +112,53 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       value = { value };
     }
 
-    // if no cid then target is the LiveView
+    // if no cid then target is the View
     if (!cid) {
-      // target is the LiveView
+      // target is the View
       await ctx.view.handleEvent(ctx, { type: event, ...value });
       return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
     }
 
-    // target is a LiveComponent
-    throw new Error("TODO: handle LiveComponent events");
-    // return await ctx.components.handleEvent(cid, { type: event, ...value });
+    // if cid, then target is a Component
+    // find component by cid and call handleEvent
+    const component = ctx.view.__components.find((c) => c.cid === cid);
+    // check invarants
+    if (!component) {
+      throw new Error(`Could not find component for cid:${cid}`);
+    }
+    if (!component.id) {
+      throw new Error(
+        `Component "${component.constructor}", has no id and therefore is not stateful and cannot handle events`
+      );
+    }
+    if (!component.handleEvent) {
+      throw new Error(
+        `Component "${component.constructor}", with id:${component.id} has not implemented handleEvent() method`
+      );
+    }
+
+    // ok, this is a stateful component with an id and handleEvent method
+    const cCtx: ComponentContext = {
+      parentId: ctx.id,
+      connected: true,
+      dispatchEvent: (event: any) => {
+        ctx.dispatchEvent(event);
+      },
+      pushEvent: (pushEvent: any) => {
+        ctx.pushEvent(pushEvent);
+      },
+    };
+
+    // handleEvent, update, and re-render
+    component.handleEvent(cCtx, { type: event, ...value });
+    component.update(cCtx);
+    const newView = component.render();
+    // update the component in the view
+    return {
+      c: {
+        [`${cid}`]: newView.toTree(true),
+      },
+    };
   } catch (e) {
     console.error("Error handling event", e);
     throw e;

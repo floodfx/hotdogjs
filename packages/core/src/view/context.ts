@@ -1,120 +1,43 @@
 import { ServerWebSocket } from "bun";
+// workaround for global.URL type error
+import { URL } from "node:url";
+// workaround for global.BroadcastChannel type error
+import { BroadcastChannel } from "node:worker_threads";
 import { Tree } from "template";
 import { WsHandler } from "ws/handler";
 import { UploadConfig, UploadConfigOptions } from "ws/handler/uploadConfig";
 import { DefaultUploadEntry, UploadEntry } from "ws/handler/uploadEntry";
-import { AnyEvent, AnyPushEvent, View, ViewEvent } from "./view";
+import { AnyEvent, AnyPushEvent, ViewEvent, type BaseView } from "./view";
 
 export type Event<E extends ViewEvent> = E["type"] | E;
 
 /**
- * Main interface to update state, interact, message, and otherwise
- * manage the lifecycle of a `LiveView`.
- *
- * The `LiveView` API (i.e. `mount`, `handleParams`, `handleInfo`, `handleEvent`)
- * are all passed `LiveViewSocket` which provide access to the current `LiveView`
- * context (via `context`) as well as various methods update the `LiveView` including
- * `assign` which updates the `LiveView`'s context (i.e. state).
+ * The context for a `View` which provides readonly properties
+ * and utility functions for interacting with / updating the view from the server.
  */
 export interface ViewContext<E extends ViewEvent> {
-  /**
-   * The id of the `LiveView`
-   */
   readonly id: string;
-  /**
-   * Whether the websocket is connected.
-   * true if connected to a websocket, false for http request
-   */
   readonly connected: boolean;
-  /**
-   * The current URL of the `LiveView`
-   */
   readonly url: URL;
-  /**
-   * Updates the `<title>` tag of the `LiveView` page.  Requires using the
-   * `live_title` helper in rendering the page.
-   *
-   * @param newPageTitle the new text value of the page - note the prefix and suffix will not be changed
-   */
   pageTitle: string;
-  /**
-   * Pushes and event (possibly with data) from the server to the client.  Requires
-   * either a `window.addEventListener` defined for that event or a client `Hook`
-   * to be defined and to be listening for the event via `this.handleEvent` callback.
-   *
-   * @param pushEvent the event to push to the client
-   */
   pushEvent(pushEvent: AnyPushEvent): void;
-  /**
-   * Updates the LiveView's browser URL with the given path and query parameters.
-   *
-   * @param path the path whose query params are being updated
-   * @param params the query params to update the path with
-   * @param replaceHistory whether to replace the current history entry or push a new one (defaults to false)
-   */
   pushPatch(path: string, params?: URLSearchParams, replaceHistory?: boolean): void;
-  /**
-   * Shutdowns the current `LiveView`and loads another `LiveView`in its place
-   * without reloading the whole page (i.e. making a full HTTP request).  Can be
-   * used to remount the current `LiveView`if need be. Use `pushPatch` to update the
-   * current `LiveView`without unloading and remounting.
-   *
-   * @param path the path whose query params are being updated
-   * @param params the query params to update the path with
-   * @param replaceHistory whether to replace the current history entry or push a new one (defaults to false)
-   */
   pushRedirect(path: string, params?: URLSearchParams, replaceHistory?: boolean): void;
-  /**
-   * Send an internal event (a.k.a "Info") to the LiveView's `handleInfo` method
-   *
-   * @param event the event to send to `handleInfo`
-   */
   dispatchEvent(event: Event<E>): void | Promise<void>;
-  /**
-   * Subscribe to the given topic using pub/sub. Events published to this topic
-   * will be delivered to `handleInfo`.
-   *
-   * @param topic the topic to subscribe this `LiveView`to
-   */
   subscribe(event: E["type"]): void | Promise<void>;
   publish(event: Event<E>): void | Promise<void>;
-  /**
-   * Allows file uploads for the given `LiveView`and configures the upload
-   * options (filetypes, size, etc).
-   * @param name the name of the upload
-   * @param options the options for the upload (optional)
-   */
   allowUpload(name: string, options?: UploadConfigOptions): void;
-  /**
-   * Cancels the file upload for a given UploadConfig by config name and file ref.
-   * @param name the name of the upload from which to cancel
-   * @param ref the ref of the upload entry to cancel
-   */
   cancelUpload(configName: string, ref: string): void;
-  /**
-   * Consume the uploaded files for a given UploadConfig (by name). This
-   * should only be called after the form's "save" event has occurred which
-   * guarantees all the files for the upload have been fully uploaded.
-   * @param name the name of the upload from which to consume
-   * @param fn the callback to run for each entry
-   * @returns an array of promises based on the return type of the callback function
-   * @throws if any of the entries are not fully uploaded (i.e. completed)
-   */
   consumeUploadedEntries<T>(configName: string, fn: (path: string, entry: UploadEntry) => Promise<T>): Promise<T[]>;
-  /**
-   * Returns two sets of files that are being uploaded, those `completed` and
-   * those `inProgress` for a given UploadConfig (by name).  Unlike `consumeUploadedEntries`,
-   * this does not require the form's "save" event to have occurred and will not
-   * throw if any of the entries are not fully uploaded.
-   * @param name the name of the upload from which to get the entries
-   * @returns an object with `completed` and `inProgress` entries
-   */
   uploadedEntries(configName: string): {
     completed: UploadEntry[];
     inProgress: UploadEntry[];
   };
 }
 
+/**
+ * Implementation of `ViewContext` for HTTP requests.  It is mostly full of no-ops.
+ */
 export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewContext<E> {
   #id: string;
   #url: URL;
@@ -133,21 +56,27 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
   get id(): string {
     return this.#id;
   }
+
   get connected(): boolean {
     return false;
   }
+
   get url(): URL {
     return this.#url;
   }
+
   set pageTitle(newPageTitle: string) {
     // noop
   }
+
   pushEvent(pushEvent: AnyPushEvent) {
     // noop
   }
+
   pushPatch(path: string, params?: URLSearchParams, replaceHistory?: boolean) {
     // noop
   }
+
   pushRedirect(path: string, params?: URLSearchParams, replaceHistory?: boolean) {
     const to = params ? `${path}?${params}` : path;
     this.#redirect = {
@@ -155,31 +84,37 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
       replace: replaceHistory ?? false,
     };
   }
+
   subscribe(eventType: E["type"]) {
     // noop
   }
+
   dispatchEvent(event: E): void | Promise<void> {
     // noop
   }
+
   publish(event: Event<E>): void | Promise<void> {
     // noop
   }
+
   allowUpload(name: string, options?: UploadConfigOptions): Promise<void> {
-    // no-op
-    // istanbul ignore next
+    // add the upload config by name so lookups can be done in other `HotPage` functions
     this.uploadConfigs[name] = new UploadConfig(name, options);
     return Promise.resolve();
   }
+
   cancelUpload(configName: string, ref: string): Promise<void> {
     // no-op
     // istanbul ignore next
     return Promise.resolve();
   }
+
   consumeUploadedEntries<T>(configName: string, fn: (path: string, entry: UploadEntry) => Promise<T>): Promise<T[]> {
     // no-op
     // istanbul ignore next
     return Promise.resolve([]);
   }
+
   uploadedEntries(configName: string): { completed: UploadEntry[]; inProgress: UploadEntry[] } {
     // no-op
     // istanbul ignore next
@@ -187,8 +122,11 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
   }
 }
 
+/**
+ * Implementation of `ViewContext` for WebSockets.
+ */
 export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContext<E> {
-  #liveView: View<AnyEvent>;
+  #view: BaseView<AnyEvent>;
   url: URL;
   #id: string;
   #csrfToken: string;
@@ -196,7 +134,6 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   #pageTitleChanged: boolean = false;
   // #flash: FlashAdaptor;
   // #sessionData: SessionData;
-  // components: LiveComponentsContext;
   pushEvents: AnyPushEvent[] = [];
   activeUploadRef: string | null = null;
   uploadConfigs: { [key: string]: UploadConfig } = {};
@@ -209,7 +146,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   constructor(
     id: string,
     url: URL,
-    view: View<AnyEvent>,
+    view: BaseView<AnyEvent>,
     csrfToken: string,
     ws: ServerWebSocket<any>,
     wsHandler: WsHandler<any>,
@@ -219,14 +156,13 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
     onPushEvent: (event: AnyPushEvent) => void
   ) {
     this.url = url;
-    this.#liveView = view;
+    this.#view = view;
     this.#id = id;
     this.#csrfToken = csrfToken;
     this.#ws = ws;
     this.#wsHandler = wsHandler;
     // this.#sessionData = sessionData;
     // this.#flash = flash;
-    // this.components = new LiveComponentsContext(joinId, onSendInfo, onPushEvent);
   }
   allowUpload(name: string, options?: any) {
     this.uploadConfigs[name] = new UploadConfig(name, options);
@@ -315,10 +251,21 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         this.#channels[event] = new BroadcastChannel(event);
         bc = this.#channels[event];
       }
-      bc.addEventListener("message", (e) => {
-        console.log("broadcast message", e);
-        this.dispatchEvent(JSON.parse(e.data));
-      });
+      bc.onmessage = (e) => {
+        if (!e) {
+          return console.error("No data in broadcast channel message for event type:", event);
+        }
+        switch (typeof e) {
+          case "string":
+            this.dispatchEvent(JSON.parse(e));
+            break;
+          case "object":
+            this.dispatchEvent(e as Event<E>);
+            break;
+          default:
+            console.error(`Unexpected event: ${e} in broadcast channel message for event type:`, event);
+        }
+      };
     }
   }
   publish(event: Event<E>) {
@@ -335,7 +282,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   }
 
   get view() {
-    return this.#liveView;
+    return this.#view;
   }
 
   get joinId() {

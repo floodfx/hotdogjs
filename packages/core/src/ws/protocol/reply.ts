@@ -43,9 +43,9 @@ export namespace PhxReply {
   export type Status = "ok";
 
   /**
-   * renderedReply builds a reply that contains the full rendered HTML for a LiveView.
+   * renderedReply builds a reply that contains the full rendered HTML for a View.
    * @param msg the original, incoming message (used to get the joinRef, msgRef, and topic)
-   * @param parts the "tree" of parts that will be used to render the client-side LiveView
+   * @param parts the "tree" of parts that will be used to render the client-side View
    * @returns the reply message
    */
   export function renderedReply(msg: Phx.Msg, parts: Tree): Reply {
@@ -64,12 +64,12 @@ export namespace PhxReply {
   }
 
   /**
-   * diff builds a diff message which only contains the parts of the LiveView that have changed.
+   * diff builds a diff message which only contains the parts of the View that have changed.
    * As opposed to "diffReply" messages, "diff" messages are sent without an original, incoming message but rather because of
-   * a "server-side" event that triggers a change in the `LiveView`
+   * a "server-side" event that triggers a change in the `View`
    * @param joinRef optional joinRef
-   * @param topic the topic (typically the LiveView's socket id)
-   * @param diff the "diffed" parts of the LiveView that have changed
+   * @param topic the topic (typically the View's socket id)
+   * @param diff the "diffed" parts of the View that have changed
    * @returns a diff message
    */
   export function diff(joinRef: string | null, topic: string, diff: Tree): Reply {
@@ -77,10 +77,10 @@ export namespace PhxReply {
   }
 
   /**
-   * diffReply builds a diff reply message which only contains the parts of the LiveView that have changed.
+   * diffReply builds a diff reply message which only contains the parts of the View that have changed.
    * As opposed to "diff" messages, "diffReply" messages are sent in response to an incoming message from the client.
    * @param msg the original, incoming message (used to get the joinRef, msgRef, and topic)
-   * @param diff the "diffed" parts of the LiveView that have changed
+   * @param diff the "diffed" parts of the View that have changed
    * @returns a diff reply message
    */
   export function diffReply(msg: Phx.Msg, diff: Tree): Reply {
@@ -100,10 +100,10 @@ export namespace PhxReply {
 
   /**
    * allowUploadReply builds a reply that contains the upload configuration, the entries to be uploaded,
-   * and the "diff" of the LiveView that will be used to render the client-side LiveView.
+   * and the "diff" of the View that will be used to render the client-side View.
    * It is part of the file upload messages flow.
    * @param msg the original, incoming message (used to get the joinRef, msgRef, and topic)
-   * @param diff the "tree" of parts that will be used to render the client-side LiveView
+   * @param diff the "tree" of parts that will be used to render the client-side View
    * @param config the upload configuration
    * @param entries the entries to be uploaded
    * @returns the reply message

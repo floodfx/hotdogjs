@@ -1,4 +1,6 @@
+export * from "./component/component";
 export * from "./http";
+export * from "./jsx2ttl";
 export * from "./template";
 export * from "./view/context";
 export * from "./view/view";

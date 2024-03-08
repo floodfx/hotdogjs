@@ -29,7 +29,7 @@ export type PhxFlash = {
 };
 
 export interface PhxJoinPayload {
-  params: {_csrf_token: string, _mounts: number};
+  params: { _csrf_token: string; _mounts: number };
   session: string;
   static: string;
   url?: string;
@@ -134,7 +134,7 @@ export type PhxFocusPayload = PhxEventPayload<"focus", { value: string }>;
 export type PhxBlurPayload = PhxEventPayload<"blur", { value: string }>;
 
 // Hook event
-// initiated by calling this.pushEvent("edit"...) in client hook in liveview.js
+// initiated by calling this.pushEvent("edit"...) in client javascript
 // {type: "hook", event: "edit", value: {id: "abc"}}
 export type PhxHookPayload = PhxEventPayload<"hook", Record<string, string>>;
 
