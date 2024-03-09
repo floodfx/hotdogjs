@@ -33,6 +33,7 @@ export default class ItemView extends BaseView<Events> {
       }
       case "only_type": {
         console.log("only_type");
+        this.item += "!";
         break;
       }
     }

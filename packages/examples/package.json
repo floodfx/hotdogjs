@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/cookie": "^0.6.0",
     "@types/phoenix": "^1.6.4",
     "@types/phoenix_live_view": "^0.18.4",
     "@types/react": "^18.2.61",
@@ -16,11 +17,12 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "cookie": "^0.6.0",
     "hotdogjs-core": "file:../core",
     "hotdogjs-form": "file:../form",
     "jsx2ttl": "0.2.2",
     "phoenix": "^1.7.10",
     "phoenix_html": "^3.3.3",
-    "phoenix_live_view": "^0.20.1"
+    "phoenix_live_view": "0.20.1"
   }
 }
