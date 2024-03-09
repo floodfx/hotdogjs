@@ -1,12 +1,7 @@
 {
   "name": "hotdogjs",
   "version": "0.0.1",
-  "workspaces": [
-    "packages/*"
-  ],
   "devDependencies": {
-    "@types/bun": "^1.0.0",
-    "hotdogjs-core": "workspace:*",
-    "hotdogjs-form": "workspace:*"
+    "@types/bun": "^1.0.0"
   }
 }

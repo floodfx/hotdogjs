@@ -1,4 +1,4 @@
-import { BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
+import { BaseComponent, BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
 
 type Event = { type: "refresh" };
 
@@ -31,6 +31,7 @@ export default class Dashboard extends BaseView<Event> {
   }
 
   handleEvent(ctx: ViewContext<Event>, event: Event) {
+    console.log("event", event);
     if (event.type === "refresh") {
       this.newOrders = randomNewOrders();
       this.salesAmount = randomSalesAmount();
@@ -41,24 +42,52 @@ export default class Dashboard extends BaseView<Event> {
   render() {
     return html`
       <h1>Sales Dashboard</h1>
-      <hr />
-      <span>🥡 New Orders</span>
-      <h2>${this.newOrders}</h2>
-      <hr />
-      <span>💰 Sales Amount</span>
-      <h2>${numberToCurrency(this.salesAmount)}</h2>
-      <hr />
-      <span>🌟 Rating</spa>
-      <h2>${ratingToStars(this.rating)}</h2>
-
-      <br />
-      <br />
+      <div class="stats shadow">
+        ${this.component(new Stat("🥡 New Orders", this.newOrders))}
+        ${this.component(new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount)))}
+        ${this.component(new Stat("🌟 Rating", ratingToStars(this.rating)))}
+      </div>
       <button phx-click="refresh">↻ Refresh</button>
     `;
   }
 
   shutdown(): void {
     clearInterval(this.timer);
+  }
+}
+
+class Stat extends BaseComponent {
+  title: string;
+  value: string | number;
+  desc?: string;
+
+  constructor(title: string, value: string | number, desc?: string) {
+    super();
+    this.title = title;
+    this.value = value;
+    this.desc = desc;
+  }
+
+  render() {
+    const { title, value, desc } = this;
+    return html`<div class="stat">
+      <div class="stat-figure text-primary">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="inline-block w-8 h-8 stroke-current">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+      </div>
+      <div class="stat-title">${title}</div>
+      <div class="stat-value text-primary">${value}</div>
+      ${desc ? html`<div class="stat-desc">${desc}</div>` : ""}
+    </div>`;
   }
 }
 

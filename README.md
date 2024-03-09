@@ -1,6 +1,6 @@
-# 🌭 hotdogjs
+# 🌭 Hotdog
 
-What goes well with Bun?  Hotdogjs of course!  (Don't forget the mustard!)
+What goes well with [Bun](https://bun.sh)?  Hotdogs!
 
 Hotdogjs is a server-side front-end framework built specifically for [Bun](https://bun.sh).  Hotdogjs supports both server rendering and client inteactivity in a single programming model that is a departure from the decade old Single Page Application (SPA) model popularized by React.  Hotdogjs is built on the following principles:
  * **Server-side rendering** - HTML is rendered on the server and sent to the client

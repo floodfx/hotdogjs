@@ -1,9 +1,15 @@
 import PhotoDB, { Photo, PhotoSchema } from "db/photo_db";
-import { BaseView, MountEvent, RenderMeta, UploadEntry, ViewContext, html } from "hotdogjs-core";
-import { Form, ZodForm } from "hotdogjs-form";
-import { form_for } from "tags/form_for";
-import { live_file_input } from "tags/live_file_input";
-import { live_img_preview } from "tags/live_img_preview";
+import {
+  BaseView,
+  MountEvent,
+  RenderMeta,
+  UploadEntry,
+  ViewContext,
+  html,
+  live_file_input,
+  live_img_preview,
+} from "hotdogjs-core";
+import { Form, ZodForm, form_for } from "hotdogjs-form";
 import { submit } from "tags/submit";
 
 type PhotosEvents =
@@ -62,7 +68,7 @@ export default class Photos extends BaseView<PhotosEvents> {
         ctx.consumeUploadedEntries("photos", async (path, entry) => {
           // we could create thumbnails, scan for viruses, etc.
           // but for now move the data from the temp file (meta.path) to a public directory
-          console.log(path, entry);
+          // e.g. createThumbail(entry);
         });
         // update the context with new photos and clear the form
         this.form.reset();

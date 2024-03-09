@@ -1,7 +1,5 @@
 import { BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
-import { Form, ZodForm } from "hotdogjs-form";
-import { form_for } from "tags/form_for";
-import { error_tag, text_input } from "tags/inputs";
+import { Form, ZodForm, error_tag, form_for, text_input } from "hotdogjs-form";
 import { submit } from "tags/submit";
 import BookDB, { Book, BookSchema } from "../../db/book_db";
 
