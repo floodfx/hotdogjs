@@ -1,4 +1,5 @@
-import { UploadEntry, html } from "index";
+import { html } from "../template";
+import type { UploadEntry } from "../ws/handler/uploadEntry";
 
 export function live_img_preview(entry: UploadEntry) {
   const { ref, upload_ref } = entry;

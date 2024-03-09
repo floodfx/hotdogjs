@@ -1,7 +1,9 @@
 import { FileSystemRouter, ServerWebSocket } from "bun";
-import { AnyEvent, AnyPushEvent, Event, MountEvent, RenderMeta, WsViewContext, type BaseView } from "index";
-import { deepDiff } from "template/diff";
+import type { Component } from "src/component/component";
 import { Template, Tree, safe } from "../../template";
+import { deepDiff } from "../../template/diff";
+import { WsViewContext, type Event } from "../../view/context";
+import type { AnyEvent, AnyPushEvent, BaseView, MountEvent, RenderMeta } from "../../view/view";
 import { PhxJoinPayload } from "../protocol/payloads";
 import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
@@ -267,7 +269,7 @@ export class WsHandler<T> {
             // shutdown the View
             if (this.#ctx) {
               // shutdown the view components
-              Object.values(this.#ctx.statefulComponents).forEach((c) => {
+              Object.values(this.#ctx.statefulComponents).forEach((c: Component<AnyEvent, Template>) => {
                 c.shutdown();
               });
               await this.#ctx.view.shutdown();

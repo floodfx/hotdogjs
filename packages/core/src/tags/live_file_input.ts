@@ -1,4 +1,5 @@
-import { UploadConfig, html, safe } from "index";
+import { html, safe } from "../template";
+import type { UploadConfig } from "../ws/handler/uploadConfig";
 
 /**
  * Creates the html for a file input that can be used to upload files to the server.

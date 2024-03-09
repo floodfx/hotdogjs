@@ -1,16 +1,17 @@
 import { randomUUID } from "crypto";
-import { DefaultUploadEntry, WsViewContext } from "index";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { Template } from "template";
+import { Template } from "../../template";
+import type { WsViewContext } from "../../view/context";
 import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
 import { UploadConfig } from "./uploadConfig";
+import type { DefaultUploadEntry } from "./uploadEntry";
 
 function tempPath(lastPathPart: string): string {
   // ensure the temp directory exists
-  const tempDir = path.join(os.tmpdir(), "com.liveviewjs.files");
+  const tempDir = path.join(os.tmpdir(), "com.hotdogjs.files");
   if (!existsSync(tempDir)) {
     mkdirSync(tempDir);
   }

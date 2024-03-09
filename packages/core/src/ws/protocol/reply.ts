@@ -1,8 +1,6 @@
-// import { AllowUploadEntries } from "../socket/ws/wsUploadHandler";
-import { UploadConfigOptions } from "ws/handler/uploadConfig";
-import { Tree } from "../../template";
-// import { UploadConfigOptions } from "../upload";
-import { AllowUploadEntries } from "ws/handler/upload";
+import type { Tree } from "../../template";
+import type { AllowUploadEntries } from "../handler/upload";
+import type { UploadConfigOptions } from "../handler/uploadConfig";
 import { Phx } from "./phx";
 
 /**
