@@ -94,6 +94,15 @@ export interface Component<E extends ViewEvent, RenderResult> {
    */
   handleEvent?: (ctx: ComponentContext<E>, event: E) => void;
 
+  /**
+   * Shuts down the `Component` and cleans up any resources.  This is called when the parent `View`
+   * is shutting down.
+   */
+  shutdown: () => void;
+
+  /**
+   *  Renders the `Component` into a `Template` for rendering by the parent `View`.
+   */
   render(): RenderResult;
 }
 
@@ -110,6 +119,10 @@ abstract class DefaultComponent<E extends ViewEvent, T> implements Component<E, 
     // no op
   }
   update(ctx: ComponentContext<E>): void {
+    // no op
+  }
+
+  shutdown(): void {
     // no op
   }
 

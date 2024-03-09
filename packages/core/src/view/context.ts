@@ -245,6 +245,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
     }
   }
   subscribe(event: E["type"]) {
+    // see publish below for publishing of messages
     if (this.connected) {
       let bc = this.#channels[event];
       if (!bc) {
@@ -252,24 +253,16 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         bc = this.#channels[event];
       }
       bc.onmessage = (e) => {
+        const msg = e as MessageEvent; // always a MessageEvent
         if (!e) {
           return console.error("No data in broadcast channel message for event type:", event);
         }
-        switch (typeof e) {
-          case "string":
-            this.dispatchEvent(JSON.parse(e));
-            break;
-          case "object":
-            this.dispatchEvent(e as Event<E>);
-            break;
-          default:
-            console.error(`Unexpected event: ${e} in broadcast channel message for event type:`, event);
-        }
+        this.dispatchEvent(msg.data);
       };
     }
   }
   publish(event: Event<E>) {
-    // convert string to event if needed
+    // convert string to event if need be
     const evt = typeof event === "string" ? { type: event } : event;
     if (this.connected) {
       let bc = this.#channels[evt.type];
@@ -277,7 +270,8 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         this.#channels[evt.type] = new BroadcastChannel(evt.type);
         bc = this.#channels[evt.type];
       }
-      bc.postMessage(JSON.stringify(evt));
+      // see subscribe above for handling of messages
+      bc.postMessage(evt);
     }
   }
 

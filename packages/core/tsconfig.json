@@ -3,7 +3,7 @@
   // Other configuration options...
   "compilerOptions": {
     "baseUrl": "./src",
-    "rootDir": "..",
+    "rootDir": ".."
   },
   "include": ["./src/**/*"]
 }

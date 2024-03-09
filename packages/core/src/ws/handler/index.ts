@@ -17,79 +17,6 @@ import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
 import { handleEvent } from "./event";
 import { onAllowUpload, onProgressUpload, onUploadBinary } from "./upload";
-// import { LiveComponentsContext } from "./wsLiveComponents";
-
-// export class WsHandlerContext {
-//   #view: View<AnyEvent, Template>;
-//   #joinId: string;
-//   #csrfToken: string;
-//   #pageTitle?: string;
-//   #pageTitleChanged: boolean = false;
-//   // #flash: FlashAdaptor;
-//   // #sessionData: SessionData;
-//   // components: LiveComponentsContext;
-//   url: URL;
-//   pushEvents: AnyPushEvent[] = [];
-//   activeUploadRef: string | null = null;
-//   uploadConfigs: { [key: string]: UploadConfig } = {};
-//   parts: Tree = {};
-
-//   constructor(
-//     view: View<AnyEvent, Template>,
-//     joinId: string,
-//     csrfToken: string,
-//     url: URL,
-//     // sessionData: SessionData,
-//     // flash: FlashAdaptor,
-//     onSendInfo: (event: Event<AnyEvent>) => void,
-//     onPushEvent: (event: AnyPushEvent) => void
-//   ) {
-//     this.#view = view;
-//     this.#joinId = joinId;
-//     this.#csrfToken = csrfToken;
-//     this.url = url;
-//     // this.#sessionData = sessionData;
-//     // this.#flash = flash;
-//     // this.components = new LiveComponentsContext(joinId, onSendInfo, onPushEvent);
-//   }
-
-//   get view() {
-//     return this.#view;
-//   }
-
-//   get joinId() {
-//     return this.#joinId;
-//   }
-
-//   get csrfToken() {
-//     return this.#csrfToken;
-//   }
-
-//   set pageTitle(newTitle: string) {
-//     if (this.#pageTitle !== newTitle) {
-//       this.#pageTitle = newTitle;
-//       this.#pageTitleChanged = true;
-//     }
-//   }
-
-//   get hasPageTitleChanged() {
-//     return this.#pageTitleChanged;
-//   }
-
-//   get pageTitle() {
-//     this.#pageTitleChanged = false;
-//     return this.#pageTitle ?? "";
-//   }
-
-//   // get sessionData() {
-//   //   return this.#sessionData;
-//   // }
-
-//   clearFlash(key: string) {
-//     console.log("TODO: clearFlash");
-//     // return this.#flash.clearFlash(this.#sessionData, key);
-//   }
-// }
 
 type WsHandlerOptions = {
   wrapperTemplateFn?: (tmpl: Template) => Template;
@@ -352,6 +279,10 @@ export class WsHandler<T> {
           try {
             // shutdown the View
             if (this.#ctx) {
+              // shutdown the view components
+              this.#ctx.view.__components.forEach((c) => {
+                c.shutdown();
+              });
               await this.#ctx.view.shutdown();
               // clear out the context
               this.#ctx = undefined;
@@ -553,8 +484,7 @@ export class WsHandler<T> {
         // either we just mounted or are on a subsequent load
         // and either case we continue with update => render
         c.update(ctx);
-        const newTemplate = c.render();
-        tree[c.cid!] = newTemplate.toTree(true);
+        tree[c.cid!] = c.render().toTree(true);
         return c;
       } else {
         // STATELESS
