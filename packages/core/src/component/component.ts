@@ -62,14 +62,6 @@ export interface Component<E extends ViewEvent, RenderResult> {
   readonly hash: string;
 
   /**
-   * `preload` is useful when multiple `LiveComponent`s of the same type are loaded
-   * within the same `View` and you want to preload data for all of them in batch.
-   * This helps to solve the N+1 query problem.
-   * @param cs an array of `Component`s to preload
-   */
-  preload(cs: Component<E, RenderResult>[]): Component<E, RenderResult>[];
-
-  /**
    * Mounts the `LiveComponent`'s stateful context.  This is called only once
    * for stateful `LiveComponent` and every render for a stateless `LiveComponent`.
    * This is called prior to `update` and `render`.
@@ -109,11 +101,6 @@ export interface Component<E extends ViewEvent, RenderResult> {
 abstract class DefaultComponent<E extends ViewEvent, T> implements Component<E, T> {
   id?: string | number;
   cid?: number;
-
-  preload(cs: Component<E, T>[]): Component<E, T>[] {
-    // no transformation by default
-    return cs;
-  }
 
   mount(ctx: ComponentContext<E>): void {
     // no op

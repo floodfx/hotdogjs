@@ -8,13 +8,6 @@ export class Hello extends BaseComponent {
     super();
     this.name = props.name;
   }
-
-  preload(cs: Hello[]): Hello[] {
-    return cs.map((c) => {
-      c.name = c.name.toUpperCase();
-      return c;
-    });
-  }
   
   render() {
     return html`

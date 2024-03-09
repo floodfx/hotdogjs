@@ -1,15 +1,5 @@
 import { FileSystemRouter, ServerWebSocket } from "bun";
-import {
-  AnyEvent,
-  AnyPushEvent,
-  Event,
-  MountEvent,
-  RenderMeta,
-  WsViewContext,
-  type BaseView,
-  type ComponentContext,
-  type ViewContext,
-} from "index";
+import { AnyEvent, AnyPushEvent, Event, MountEvent, RenderMeta, WsViewContext, type BaseView } from "index";
 import { deepDiff } from "template/diff";
 import { Template, Tree, safe } from "../../template";
 import { PhxJoinPayload } from "../protocol/payloads";
@@ -139,9 +129,6 @@ export class WsHandler<T> {
             await view.mount(this.#ctx!, mountParams);
             await view.handleParams(this.#ctx!, url);
             const tmpl = await view.render(this.meta());
-
-            // now preload components for the view just this once
-            view.__preloadComponents(this.#ctx!);
 
             // convert the view into a parts tree
             const parts = await this.templateParts(tmpl);
@@ -280,7 +267,7 @@ export class WsHandler<T> {
             // shutdown the View
             if (this.#ctx) {
               // shutdown the view components
-              this.#ctx.view.__components.forEach((c) => {
+              Object.values(this.#ctx.statefulComponents).forEach((c) => {
                 c.shutdown();
               });
               await this.#ctx.view.shutdown();
@@ -391,7 +378,7 @@ export class WsHandler<T> {
     this.#ctx!.parts = newParts;
 
     // now add the components, events, and title parts
-    diff = WsHandler.maybeAddLiveComponentsToParts(this.#ctx!.view, this.#ctx!, diff, false);
+    diff = this.maybeAddLiveComponentsToParts(diff);
     diff = this.maybeAddEventsToParts(diff);
     return this.maybeAddTitleToView(diff);
   }
@@ -404,7 +391,7 @@ export class WsHandler<T> {
     let parts = tmpl.toTree(true);
 
     // step 3: add any `LiveComponent` renderings to the parts tree
-    parts = WsHandler.maybeAddLiveComponentsToParts(this.#ctx!.view, this.#ctx!, parts, true);
+    parts = this.maybeAddLiveComponentsToParts(parts);
 
     // step 4: add any push events to the parts tree
     parts = this.maybeAddEventsToParts(parts);
@@ -453,59 +440,22 @@ export class WsHandler<T> {
     return tmpl;
   }
 
-  static maybeAddLiveComponentsToParts(
-    view: BaseView<AnyEvent>,
-    vCtx: ViewContext<AnyEvent>,
-    parts: Tree,
-    mounting: boolean
-  ) {
-    const cs = view.__components;
-
-    // no components, return parts
-    if (cs.length === 0) {
-      return parts;
-    }
-
-    // otherwise, aggregate all the parts from the components
-    const tree: Tree = {};
-    view.__components = cs.map((c) => {
-      let ctx: ComponentContext<AnyEvent> = {
-        parentId: vCtx.id,
-        connected: vCtx.connected,
-        dispatchEvent: vCtx.dispatchEvent,
-        pushEvent: vCtx.pushEvent,
-      };
-      // now handle stateful or stateless components
-      if (c.id) {
-        // STATEFUL
-        if (mounting) {
-          c.mount(ctx);
-        }
-        // either we just mounted or are on a subsequent load
-        // and either case we continue with update => render
-        c.update(ctx);
-        tree[c.cid!] = c.render().toTree(true);
-        return c;
-      } else {
-        // STATELESS
-        if (c.handleEvent) {
-          console.warn(
-            `Component "${c.constructor}" has "handleEvent" defined but no "id" attribute so it cannot be targeted.`
-          );
-        }
-        // STATELESS components lifecycle is always:
-        // preload => mount => update => render
-        c.mount(ctx);
-        c.update(ctx);
-        tree[c.cid!] = c.render().toTree(true); // stateless components are always rendered
-        return c;
-      }
+  private maybeAddLiveComponentsToParts(tree: Tree) {
+    const changedParts: Tree = {};
+    // iterate over stateful components to find changed
+    Object.values(this.#ctx!.statefulComponents).forEach((c) => {
+      const newTree = c.render().toTree(true);
+      changedParts[`${c.cid}`] = newTree;
     });
-    // update parts tree with the changed live components
-    return {
-      ...parts,
-      c: tree,
-    };
+    // if any stateful component changed
+    if (Object.keys(changedParts).length > 0) {
+      // return parts with changed LiveComponents
+      return {
+        ...tree,
+        c: changedParts,
+      };
+    }
+    return tree;
   }
 
   async pushNav(
@@ -546,10 +496,13 @@ export class WsHandler<T> {
     this.handleMsg([null, null, this.#ctx!.joinId, "info", info] as Phx.Msg);
   }
 
-  meta(): RenderMeta {
+  meta<E extends AnyEvent>(): RenderMeta<E> {
     return {
       csrfToken: this.#csrfToken,
       uploads: this.#ctx!.uploadConfigs,
+      component: (c) => {
+        return this.#ctx!.component(c);
+      },
     };
   }
 }

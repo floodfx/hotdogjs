@@ -58,7 +58,7 @@ export interface MountEvent extends ViewEvent {
  * Meta data passed to the render function of a View with additional
  * information sometimes needed for rendering.
  */
-export interface RenderMeta {
+export interface RenderMeta<E extends AnyEvent> {
   /**
    * The csrf token for the request, useful for passing along to forms
    * to prevent CSRF attacks.
@@ -70,6 +70,13 @@ export interface RenderMeta {
    * handing uploads in the view.
    */
   readonly uploads: { [key: string]: UploadConfig };
+
+  /**
+   * Helper method to rendering a `Component` in the `View.render` method.
+   * @param c  the `Component` to render
+   * @returns a `Template` that represents the `Component` in the `View.render`
+   */
+  component: (c: Component<E, Template>) => Template;
 }
 
 /**
@@ -119,7 +126,7 @@ export interface View<E extends ViewEvent, RenderResult> {
    *
    * @param meta the `RenderMeta` that is passed to the `View` when rendering
    */
-  render(meta: RenderMeta): RenderResult | Promise<RenderResult>;
+  render(meta: RenderMeta<E>): RenderResult | Promise<RenderResult>;
 
   /**
    * `shutdown` is called when the `View` is being shutdown / unmounted.  This method is useful
@@ -133,14 +140,6 @@ export interface View<E extends ViewEvent, RenderResult> {
  * your own `View`.
  */
 export abstract class BaseView<E extends ViewEvent> implements View<E, Template> {
-  // the component id index
-  #cidIndex = 0;
-  // ensure that each component has a unique hash + id
-  #uniqueIds: { [key: string]: string } = {};
-
-  __components: Component<any, Template>[] = [];
-  __unpreloadedComponents: Component<any, Template>[] = [];
-
   mount(ctx: ViewContext<E>, e: MountEvent): void | Promise<void> {
     // noop
   }
@@ -171,49 +170,5 @@ export abstract class BaseView<E extends ViewEvent> implements View<E, Template>
     return templateFromString(htmlTemplate, this);
   }
 
-  /**
-   * Helper method to rendering a `Component` in the `View.render` method.
-   * @param c  the `Component` to render
-   * @returns a `Template` that represents the `Component` in the `View.render`
-   */
-  component(c: Component<E, Template>): Template {
-    c.cid = ++this.#cidIndex;
-    this.__unpreloadedComponents.push(c);
-
-    // ensure stateful components have unique ids
-    if (c.id) {
-      const { hash } = c;
-      const uid = `${hash}_${c.id}`;
-      if (!this.#uniqueIds[uid]) {
-        this.#uniqueIds[uid] = uid;
-      } else {
-        throw new Error(
-          `Component of type ${c.constructor.name} with id ${c.id} already exists.  Each component of the same type must have a unique id`
-        );
-      }
-    }
-    return new Template([String(c.cid)], [], true);
-  }
-
-  __preloadComponents(vCtx: ViewContext<E>) {
-    // group components by hash / type
-    const componentsByHash: { [key: string]: Component<E, Template>[] } = {};
-    this.__unpreloadedComponents.forEach((c) => {
-      const { hash } = c;
-      if (!componentsByHash[hash]) {
-        componentsByHash[hash] = [];
-      }
-      componentsByHash[hash].push(c);
-    });
-    // remove all components from the unpreloaded list
-    this.__unpreloadedComponents = [];
-
-    // for each group of components, call preload
-    Object.values(componentsByHash).forEach((cs) => {
-      // use preload to load all the components by hash
-      this.__components.push(...cs[0].preload(cs));
-    });
-  }
-
-  abstract render(meta: RenderMeta): Template | Promise<Template>;
+  abstract render(meta: RenderMeta<E>): Template | Promise<Template>;
 }

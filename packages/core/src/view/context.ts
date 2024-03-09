@@ -2,6 +2,7 @@ import { ServerWebSocket } from "bun";
 // workaround for global.URL type error
 import { URL } from "node:url";
 // workaround for global.BroadcastChannel type error
+import { Component, ComponentContext, Template } from "index";
 import { BroadcastChannel } from "node:worker_threads";
 import { Tree } from "template";
 import { WsHandler } from "ws/handler";
@@ -138,6 +139,9 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   activeUploadRef: string | null = null;
   uploadConfigs: { [key: string]: UploadConfig } = {};
   parts: Tree = {};
+  // the component id index
+  #cidIndex = 0;
+  statefulComponents: { [key: string]: Component<any, Template> } = {};
 
   #ws: ServerWebSocket<any>;
   #wsHandler: WsHandler<any>;
@@ -272,6 +276,54 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
       }
       // see subscribe above for handling of messages
       bc.postMessage(evt);
+    }
+  }
+
+  component(c: Component<any, Template>): Template {
+    try {
+      // setup socket
+      const cCtx: ComponentContext = {
+        parentId: this.#id,
+        connected: true,
+        dispatchEvent: (event: E) => {
+          this.dispatchEvent(event);
+        },
+        pushEvent: (pushEvent: E) => {
+          this.pushEvent(pushEvent);
+        },
+      };
+
+      // STATEFUL
+      if (c.id) {
+        const { hash, id } = c;
+        const uid = `${hash}_${id}`;
+        const cachedComponent = this.statefulComponents[uid];
+        if (!cachedComponent) {
+          // first load lifecycle
+          c.cid = ++this.#cidIndex;
+          this.statefulComponents[uid] = c;
+          c.mount(cCtx);
+        }
+        c.update(cCtx);
+        // return placeholder
+        return new Template([String(c.cid)], [], true);
+      }
+
+      // warn user if `handleEvent` is implemented that it cannot be called
+      if (c.handleEvent) {
+        console.warn(
+          `${c.constructor.name} has a handleEvent method but no "id" attribute so cannot receive events.  Set an id property if you want to handle events.`
+        );
+      }
+
+      // STATELESS
+      // always run full mount => update => render
+      c.mount(cCtx);
+      c.update(cCtx);
+      return c.render();
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
   }
 

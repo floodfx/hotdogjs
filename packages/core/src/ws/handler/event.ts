@@ -104,7 +104,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       const key = clearFlashPayload.value.key;
       ctx.clearFlash(key);
       // render the live view with the cleared flash
-      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
+      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs, component: ctx.component });
     }
 
     // if value is a string or number, wrap it in an object
@@ -116,12 +116,12 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
     if (!cid) {
       // target is the View
       await ctx.view.handleEvent(ctx, { type: event, ...value });
-      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs });
+      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs, component: ctx.component });
     }
 
     // if cid, then target is a Component
     // find component by cid and call handleEvent
-    const component = ctx.view.__components.find((c) => c.cid === cid);
+    const component = Object.values(ctx.statefulComponents).find((c) => c.cid === cid);
 
     // check invarants
     if (!component) {
@@ -140,7 +140,6 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
 
     // ok, this is a stateful component with an id and handleEvent method
     const cCtx: ComponentContext = {
-      parentId: ctx.id,
       connected: true,
       dispatchEvent: (event: any) => {
         ctx.dispatchEvent(event);

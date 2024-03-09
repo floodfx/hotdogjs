@@ -11,6 +11,7 @@ import {
   safe,
   templateFromString,
   type BaseView,
+  type Component,
   type ComponentContext,
 } from "index";
 import { URL } from "node:url";
@@ -145,20 +146,7 @@ async function renderHttpView<T extends any>(
     return Response.redirect(ctx.redirect.to, 302);
   }
 
-  // render to get the components into preloaded state
-  var tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs });
-
-  // if no components then no `preload` and we can return the template now
-  if (view.__preloadComponents.length === 0) {
-    return renderTmpl(tmpl, pageTemplate, templateData, htmlTag, viewId, csrfToken);
-  }
-
-  // otherwise, we need to preload the components, and rerender
-  // in order to get the fully rendered template
-  view.__preloadComponents(ctx);
-
   const cCtx: ComponentContext<AnyEvent> = {
-    parentId: ctx.id,
     connected: false,
     dispatchEvent: (event: AnyEvent) => {
       ctx.dispatchEvent(event);
@@ -168,19 +156,27 @@ async function renderHttpView<T extends any>(
     },
   };
 
-  // replace `component` method with one that returns the preloaded component
-  // kinda hacky but it works...
-  var cidIndex = 0;
-  view.component = (c) => {
-    const cid = ++cidIndex;
-    // little slow but want to make sure we get the right component
-    const comp = view.__components.find((c) => c.cid === cid)!;
-    comp.mount(cCtx);
-    comp.update(cCtx);
-    return comp.render();
+  // replace `component` method with one that just renders all the components
+  const component = (c: Component<AnyEvent, Template>) => {
+    c.mount(cCtx);
+    c.update(cCtx);
+    return c.render();
   };
+
+  // render to get the components into preloaded state
+  var tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs, component });
+
+  // // if no components then no `preload` and we can return the template now
+  // if (view.__preloadComponents.length === 0) {
+  //   return renderTmpl(tmpl, pageTemplate, templateData, htmlTag, viewId, csrfToken);
+  // }
+
+  // // otherwise, we need to preload the components, and rerender
+  // // in order to get the fully rendered template
+  // view.__preloadComponents(ctx);
+
   // rerun render to get the components into the template
-  tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs });
+  // tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs });
   return renderTmpl(tmpl, pageTemplate, templateData, htmlTag, viewId, csrfToken);
 }
 
