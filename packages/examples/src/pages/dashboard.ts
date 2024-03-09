@@ -1,4 +1,4 @@
-import { BaseComponent, BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
+import { BaseComponent, BaseView, MountEvent, ViewContext, html, type RenderMeta } from "hotdogjs-core";
 
 type Event = { type: "refresh" };
 
@@ -31,7 +31,6 @@ export default class Dashboard extends BaseView<Event> {
   }
 
   handleEvent(ctx: ViewContext<Event>, event: Event) {
-    console.log("event", event);
     if (event.type === "refresh") {
       this.newOrders = randomNewOrders();
       this.salesAmount = randomSalesAmount();
@@ -39,13 +38,14 @@ export default class Dashboard extends BaseView<Event> {
     }
   }
 
-  render() {
+  render(meta: RenderMeta<Event>) {
+    const { component } = meta;
     return html`
       <h1>Sales Dashboard</h1>
       <div class="stats shadow">
-        ${this.component(new Stat("🥡 New Orders", this.newOrders))}
-        ${this.component(new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount)))}
-        ${this.component(new Stat("🌟 Rating", ratingToStars(this.rating)))}
+        ${component(new Stat("🥡 New Orders", this.newOrders))}
+        ${component(new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount)))}
+        ${component(new Stat("🌟 Rating", ratingToStars(this.rating)))}
       </div>
       <button phx-click="refresh">↻ Refresh</button>
     `;
