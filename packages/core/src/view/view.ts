@@ -1,8 +1,8 @@
 import { MatchedRoute } from "bun";
-import { type Component } from "index";
 import { URL } from "node:url";
-import { UploadConfig } from "ws/handler/uploadConfig";
+import { type Component } from "../component/component";
 import { Template, templateFromString } from "../template";
+import { UploadConfig } from "../ws/handler/uploadConfig";
 import { ViewContext } from "./context";
 
 /**

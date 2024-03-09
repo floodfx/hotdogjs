@@ -1,20 +1,12 @@
 import { FileSystemRouter, MatchedRoute, type BunFile, type WebSocketHandler } from "bun";
 import cookie from "cookie";
 import { randomUUID } from "crypto";
-import {
-  AnyEvent,
-  HttpViewContext,
-  MountEvent,
-  Template,
-  WsHandler,
-  html,
-  safe,
-  templateFromString,
-  type BaseView,
-  type Component,
-  type ComponentContext,
-} from "index";
 import { URL } from "node:url";
+import type { Component, ComponentContext } from "../component/component";
+import { html, safe, templateFromString, type Template } from "../template";
+import { HttpViewContext } from "../view/context";
+import type { AnyEvent, BaseView, MountEvent } from "../view/view";
+import { WsHandler } from "../ws/handler";
 import type { Conf } from "./conf";
 
 export type ServerInfo = {
@@ -147,6 +139,7 @@ async function renderHttpView<T extends any>(
   }
 
   const cCtx: ComponentContext<AnyEvent> = {
+    parentId: viewId,
     connected: false,
     dispatchEvent: (event: AnyEvent) => {
       ctx.dispatchEvent(event);

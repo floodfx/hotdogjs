@@ -1,5 +1,6 @@
-import { WsViewContext, type ComponentContext } from "index";
-import { Template, Tree } from "template";
+import type { ComponentContext } from "../../component/component";
+import { Template, Tree } from "../../template";
+import type { WsViewContext } from "../../view/context";
 import { Phx } from "../protocol/phx";
 import { DefaultUploadEntry } from "./uploadEntry";
 
@@ -140,6 +141,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
 
     // ok, this is a stateful component with an id and handleEvent method
     const cCtx: ComponentContext = {
+      parentId: ctx.id,
       connected: true,
       dispatchEvent: (event: any) => {
         ctx.dispatchEvent(event);

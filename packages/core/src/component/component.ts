@@ -1,6 +1,8 @@
 import crypto from "crypto";
-import type { AnyEvent, AnyPushEvent, Event, Template, ViewEvent } from "index";
 import { type ReactNode } from "react";
+import type { Template } from "../template";
+import type { Event } from "../view/context";
+import type { AnyEvent, AnyPushEvent, ViewEvent } from "../view/view";
 
 /**
  * `ComponentContext` is the context that is passed to a `Component` when

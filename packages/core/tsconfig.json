@@ -1,9 +1,23 @@
 {
-  "extends": "../../tsconfig.json",
-  // Other configuration options...
   "compilerOptions": {
-    "baseUrl": "./src",
-    "rootDir": ".."
+    "module": "esnext",
+    "esModuleInterop": true,
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "declaration": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "target": "esnext",
+    "lib": ["esnext"],
+    "moduleResolution": "node",
+    "types": ["node", "bun-types"],
+    "outDir": "./build",
+    "baseUrl": "."
   },
-  "include": ["./src/**/*"]
+  "include": ["src/index.ts"],
+  "exclude": ["build", "dist", "node_modules", "packages"]
 }

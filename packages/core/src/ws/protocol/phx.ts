@@ -1,6 +1,12 @@
-import { BinaryUploadSerDe } from "ws/handler/binaryUploadSerDe";
-import { AllowUploadEntry } from "./payloads";
+import { BinaryUploadSerDe } from "../handler/binaryUploadSerDe";
 
+export type AllowUploadEntry = {
+  last_modified: number;
+  name: string;
+  size: number;
+  type: string;
+  ref: string;
+};
 
 /**
  * Phx is a namespace for Phoenix LiveView protocol related types and functions.

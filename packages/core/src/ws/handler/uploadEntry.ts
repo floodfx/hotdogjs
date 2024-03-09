@@ -1,8 +1,17 @@
 import { randomUUID } from "crypto";
-import { mime } from "mime";
 import { readFileSync } from "node:fs";
-import { PhxEventUpload } from "../protocol/payloads";
+import { mime } from "../../mime";
+// import type { PhxEventUpload } from "../protocol/phx";
 import { UploadConfig } from "./uploadConfig";
+
+export type PhxEventUpload = {
+  path: string; // config path
+  last_modified: number; // ts of last modified
+  ref: string; // order of upload
+  name: string; // original filename
+  type: string; // mime type
+  size: number; // bytes
+};
 
 /**
  * UploadEntry represents a file and related metadata selected for upload

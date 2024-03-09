@@ -75,7 +75,7 @@ class Mime {
           // istanbul ignore next
           throw new Error(`Failed to load mime-db: ${res.status} ${res.statusText}`);
         }
-        this.db = await res.json();
+        this.db = (await res.json()) as MimeDB;
       }
 
       // build a reverse lookup table for extensions to mime types

@@ -1,18 +1,39 @@
 {
   "name": "hotdogjs-core",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
-  "type": "module",
+  "version": "0.0.4",
+  "main": "dist/hotdog.js",
+  "types": "dist/hotdog.d.ts",
+  "module": "dist/hotdog.mjs",
+  "files": [
+    "dist/hotdog.js",
+    "dist/hotdog.d.ts",
+    "dist/hotdog.mjs",
+    "dist/hotdog.d.mts"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist; rm -rf build",
+    "build": "bun run build.ts && tsc --noEmit false --declaration true --emitDeclarationOnly true --skipLibCheck true --composite false --outfile dist/index.d.ts",
+    "copy-to-dist": "cp build/hotdog.js dist; cp build/hotdog.mjs dist; cp build/hotdog.d.ts dist; cp build/hotdog.d.mts dist",
+    "rollup": "mkdir dist; rollup -c;",
+    "prepublish": "bun run clean; bun run rollup; bun run copy-to-dist",
+    "check": "tsc --noEmit"
+  },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.0.2",
+    "@rollup/plugin-node-resolve": "^13.1.3",
+    "@rollup/plugin-typescript": "^8.3.1",
     "@types/bun": "1.0.7",
     "@types/cookie": "^0.6.0",
-    "@types/react": "^18.2.64"
+    "@types/react": "^18.2.64",
+    "rollup": "^2.70.1",
+    "rollup-plugin-dts": "^4.2.0",
+    "rollup-plugin-typescript2": "^0.31.2",
+    "typescript": "^5.4.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "cookie": "^0.6.0",
-    "jsx2ttl": "0.2.3"
+    "cookie": "^0.6.0"
   }
 }

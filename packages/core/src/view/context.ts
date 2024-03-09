@@ -2,12 +2,12 @@ import { ServerWebSocket } from "bun";
 // workaround for global.URL type error
 import { URL } from "node:url";
 // workaround for global.BroadcastChannel type error
-import { Component, ComponentContext, Template } from "index";
 import { BroadcastChannel } from "node:worker_threads";
-import { Tree } from "template";
-import { WsHandler } from "ws/handler";
-import { UploadConfig, UploadConfigOptions } from "ws/handler/uploadConfig";
-import { DefaultUploadEntry, UploadEntry } from "ws/handler/uploadEntry";
+import type { Component, ComponentContext } from "../component/component";
+import { Template, Tree } from "../template";
+import { WsHandler } from "../ws/handler";
+import { UploadConfig, UploadConfigOptions } from "../ws/handler/uploadConfig";
+import { DefaultUploadEntry, UploadEntry } from "../ws/handler/uploadEntry";
 import { AnyEvent, AnyPushEvent, ViewEvent, type BaseView } from "./view";
 
 export type Event<E extends ViewEvent> = E["type"] | E;
@@ -256,12 +256,11 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         this.#channels[event] = new BroadcastChannel(event);
         bc = this.#channels[event];
       }
-      bc.onmessage = (e) => {
-        const msg = e as MessageEvent; // always a MessageEvent
+      bc.onmessage = (e: any) => {
         if (!e) {
           return console.error("No data in broadcast channel message for event type:", event);
         }
-        this.dispatchEvent(msg.data);
+        this.dispatchEvent(e.data);
       };
     }
   }
