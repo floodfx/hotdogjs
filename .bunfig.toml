@@ -1,4 +1,0 @@
-[define]
-"process.env.MY_FOO" = "'my foo'"
-
-preload = ["./myPlugin.ts"]
