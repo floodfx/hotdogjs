@@ -122,18 +122,19 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
     // if cid, then target is a Component
     // find component by cid and call handleEvent
     const component = ctx.view.__components.find((c) => c.cid === cid);
+
     // check invarants
     if (!component) {
       throw new Error(`Could not find component for cid:${cid}`);
     }
     if (!component.id) {
       throw new Error(
-        `Component "${component.constructor}", has no id and therefore is not stateful and cannot handle events`
+        `Component "${component.constructor.name}", has no id and therefore is not stateful and cannot handle events`
       );
     }
     if (!component.handleEvent) {
       throw new Error(
-        `Component "${component.constructor}", with id:${component.id} has not implemented handleEvent() method`
+        `Component "${component.constructor.name}", with id:${component.id} has not implemented handleEvent() method`
       );
     }
 

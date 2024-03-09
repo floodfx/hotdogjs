@@ -5,12 +5,14 @@
   "type": "module",
   "devDependencies": {
     "@types/bun": "1.0.7",
+    "@types/cookie": "^0.6.0",
     "@types/react": "^18.2.64"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "cookie": "^0.6.0",
     "jsx2ttl": "0.2.3"
   }
 }

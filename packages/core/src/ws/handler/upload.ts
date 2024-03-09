@@ -30,7 +30,6 @@ export async function onUploadBinary(ctx: WsViewContext, msg: Phx.Msg<Buffer>): 
   const [joinRef, msgRef, topic, event, payload] = msg;
 
   writeTempFile(randomTempFilePath, payload);
-  // console.log("wrote temp file", randomTempFilePath, header.length, `"${header.toString()}"`);
 
   // split topic to get uploadRef
   const ref = topic.split(":")[1];
