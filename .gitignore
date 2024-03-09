@@ -170,3 +170,6 @@ dist
 
 # sqlite files
 *.dev.sqlite*
+
+build/
+.rollup.cache/
