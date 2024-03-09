@@ -9,5 +9,8 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "hotdogjs-core": "../core"
   }
 }
