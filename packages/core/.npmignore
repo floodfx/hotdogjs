@@ -8,10 +8,15 @@ tsconfig.json
 
 out/
 
-src/
+# src/
 
 *.tgz
 
 bunfig.toml
 
 build.ts
+
+build/
+dist/
+.rollup.cache/
+rollup.config.js
