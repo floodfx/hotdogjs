@@ -1,16 +1,15 @@
 {
-  "name": "hotdogjs-form",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
-  "type": "module",
+  "name": "@hotdogjs/form",
+  "version": "0.0.2",
+  "main": "src/index.ts",
+  "description": "Form package for HotdogJS",
   "devDependencies": {
     "@types/bun": "latest",
     "zod": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "hotdogjs": "latest"
   },
-  "dependencies": {
-    "hotdogjs-core": "../core"
-  }
+  "license": "MIT"
 }

@@ -1,0 +1,22 @@
+src/jsx/
+src/tests/
+src/ttl/
+src/direct_plugin.ts
+
+bun.lockb
+tsconfig.json
+
+out/
+
+# src/
+
+*.tgz
+
+bunfig.toml
+
+build.ts
+
+build/
+dist/
+.rollup.cache/
+rollup.config.js

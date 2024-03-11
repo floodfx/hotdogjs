@@ -1,4 +1,4 @@
-import { html, safe } from "hotdogjs-core";
+import { html, safe } from "hotdogjs";
 
 interface FormForOptions {
   phx_submit?: string;
