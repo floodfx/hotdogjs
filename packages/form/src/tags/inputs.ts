@@ -1,4 +1,4 @@
-import { BaseComponent, html, safe } from "hotdogjs-core";
+import { BaseComponent, html, safe } from "hotdogjs";
 import type { Form } from "../form";
 
 interface InputOptions {
