@@ -305,7 +305,8 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         }
         c.update(cCtx);
         // return placeholder
-        return new Template([String(c.cid)], [], true);
+        // @ts-ignore - force this to be a number
+        return new Template([Number(c.cid)], [], true);
       }
 
       // warn user if `handleEvent` is implemented that it cannot be called

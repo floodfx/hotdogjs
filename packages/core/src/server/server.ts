@@ -1,5 +1,4 @@
 import { FileSystemRouter, MatchedRoute, type BunFile, type WebSocketHandler } from "bun";
-import cookie from "cookie";
 import { randomUUID } from "crypto";
 import { URL } from "node:url";
 import type { Component, ComponentContext } from "../component/component";
@@ -32,9 +31,16 @@ export class Server {
     return this.#router;
   }
 
-  async viewRouter(req: Request) {
+  async viewRouter(
+    req: Request,
+    middleware: (req: Request) => Promise<Response | null> = async () => null
+  ): Promise<Response | null> {
     const matchedRoute = this.router.match(req);
     if (matchedRoute) {
+      const middlewareResp = await middleware(req);
+      if (middlewareResp) {
+        return middlewareResp;
+      }
       const resolver = this.#conf.pageTemplate ?? this.loadPublicIndexTemplate;
       return renderHttpView(matchedRoute, req, await resolver(matchedRoute, this.#conf), {});
     }
@@ -44,9 +50,14 @@ export class Server {
   wsRouter(req: Request): [boolean, { csrfToken: string } | undefined] {
     const url = new URL(req.url);
     if (url.pathname === "/live/websocket") {
-      // get csrf token from cookie
-      const csrfToken = cookie.parse(req.headers.get("cookie") ?? "").__csrf_token;
-      return [true, { csrfToken }];
+      // _csrf_token is required for websocket connections
+      // and automatically added to the query params by the client javascript
+      const csrfToken = url.searchParams.get("_csrf_token") ?? "";
+      if (csrfToken) {
+        return [true, { csrfToken }];
+      } else {
+        console.warn(`No "_csrf_token" found in query params`);
+      }
     }
     return [false, undefined];
   }
@@ -82,10 +93,19 @@ export class Server {
     }
     let name = url.pathname.split("/").slice(2).join("/");
     name = name.replace(/\.\./g, ""); // remove any directory traversal
-    return Bun.file(publicDir + "/" + name);
+    // check file exists
+    const file = Bun.file(publicDir + "/" + name);
+    if (!file.exists()) {
+      return null;
+    }
+    return file;
   }
 
   async buildClientJavascript() {
+    const file = Bun.file(this.#conf.clientFile);
+    if (!file.exists()) {
+      throw new Error(`Cannot compile client file. "${this.#conf.clientFile}" does not exist`);
+    }
     return await Bun.build({
       entrypoints: [this.#conf.clientFile],
       outdir: this.#conf.clientDir,
@@ -106,7 +126,7 @@ export class Server {
  * @param htmlTag optional tag to wrap the View content in, defaults to "div"
  * @returns
  */
-async function renderHttpView<T extends any>(
+async function renderHttpView<T extends object>(
   matchedRoute: MatchedRoute,
   req: Request,
   pageTemplate: string,
@@ -157,46 +177,13 @@ async function renderHttpView<T extends any>(
   };
 
   // render to get the components into preloaded state
-  var tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs, component });
-
-  // // if no components then no `preload` and we can return the template now
-  // if (view.__preloadComponents.length === 0) {
-  //   return renderTmpl(tmpl, pageTemplate, templateData, htmlTag, viewId, csrfToken);
-  // }
-
-  // // otherwise, we need to preload the components, and rerender
-  // // in order to get the fully rendered template
-  // view.__preloadComponents(ctx);
-
-  // rerun render to get the components into the template
-  // tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs });
-  return renderTmpl(tmpl, pageTemplate, templateData, htmlTag, viewId, csrfToken);
-}
-
-function renderTmpl<T>(
-  tmpl: Template,
-  pageTemplate: string,
-  templateData: T,
-  htmlTag: string,
-  viewId: string,
-  csrfToken: string
-) {
-  // TODO: implement tracking of statics
+  const tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs, component });
   const content = html`<${htmlTag} data-phx-main="true" data-phx-session="" data-phx-static="" id="phx-${viewId}">
     ${safe(tmpl)}
   </${htmlTag}>`;
   const template = templateFromString(pageTemplate, { content, ...templateData, csrfToken });
-
-  const csrfCookie = cookie.serialize("__csrf_token", csrfToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    path: "/", // scope to root of domain
-  });
-
   return new Response(template.toString(), {
     headers: {
-      "Set-Cookie": csrfCookie,
       "Content-Type": "text/html",
     },
   });
