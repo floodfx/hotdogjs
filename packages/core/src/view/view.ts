@@ -27,7 +27,7 @@ export interface AnyPushEvent extends AnyEvent {}
 /**
  * MountEvent is the event that is sent to the View when it is mounted.
  */
-export interface MountEvent extends ViewEvent {
+export type MountEvent<T extends object = {}> = {
   /**
    * always "mount"
    */
@@ -52,7 +52,7 @@ export interface MountEvent extends ViewEvent {
    * the matched route parameters
    */
   params: MatchedRoute["params"];
-}
+} & T;
 
 /**
  * Meta data passed to the render function of a View with additional
