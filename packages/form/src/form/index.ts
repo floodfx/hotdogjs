@@ -29,6 +29,11 @@ export interface Form<T> {
    */
   readonly valid: boolean;
 
+  /**
+   * A custom message that can be set and displayed by the developer
+   */
+  customMessage?: string;
+
   update(newAttrs: Partial<T>, action?: string): void;
   reset(): void;
 }
@@ -40,6 +45,7 @@ export class ZodForm<T extends {}> implements Form<T> {
   #touched: Set<keyof T>;
   #valid: boolean;
   #errors?: FormErrors<T>;
+
   constructor(schema: SomeZodObject, data?: Partial<T>, action?: string) {
     this.#schema = schema;
     this.#data = data ?? {};
@@ -63,6 +69,8 @@ export class ZodForm<T extends {}> implements Form<T> {
   get errors(): FormErrors<T> | undefined {
     return this.#errors;
   }
+
+  customMessage?: string | undefined;
 
   update(newAttrs: Partial<T>, action?: string) {
     this.#action = action;
