@@ -96,7 +96,11 @@ export async function onProgressUpload(ctx: WsViewContext, payload: Phx.Progress
     console.error("Received progress upload but could not find upload config for ref", ref);
   }
 
-  return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs, component: ctx.component });
+  return await ctx.view.render({
+    csrfToken: ctx.csrfToken,
+    uploads: ctx.uploadConfigs,
+    component: (c) => ctx.component(c),
+  });
 }
 
 export type AllowUploadEntries = { [key: string]: string };
@@ -131,7 +135,7 @@ export async function onAllowUpload(ctx: WsViewContext, payload: Phx.AllowUpload
   const view = await ctx.view.render({
     csrfToken: ctx.csrfToken,
     uploads: ctx.uploadConfigs,
-    component: ctx.component,
+    component: (c) => ctx.component(c),
   });
   return {
     entries: entriesReply,

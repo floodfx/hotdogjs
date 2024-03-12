@@ -148,14 +148,14 @@ async function renderHttpView<T extends object>(
   // HTTP Lifecycle is: mount => handleParams => render
   await view.mount(ctx, mountParams);
   // check for redirects from mount
-  if (ctx.redirect) {
-    return Response.redirect(ctx.redirect.to, 302);
+  if (ctx.redirectEvent) {
+    return Response.redirect(ctx.redirectEvent.to, 302);
   }
   await view.handleParams(ctx, new URL(req.url));
   // check for redirects from handleParams
-  if (ctx.redirect) {
+  if (ctx.redirectEvent) {
     // @ts-ignore - ts wrongly thinks redirect is undefined
-    return Response.redirect(ctx.redirect.to, 302);
+    return Response.redirect(ctx.redirectEvent.to, 302);
   }
 
   const cCtx: ComponentContext<AnyEvent> = {

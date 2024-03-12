@@ -105,7 +105,11 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       const key = clearFlashPayload.value.key;
       ctx.clearFlash(key);
       // render the live view with the cleared flash
-      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs, component: ctx.component });
+      return await ctx.view.render({
+        csrfToken: ctx.csrfToken,
+        uploads: ctx.uploadConfigs,
+        component: (c) => ctx.component(c),
+      });
     }
 
     // if value is a string or number, wrap it in an object
@@ -117,7 +121,11 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
     if (!cid) {
       // target is the View
       await ctx.view.handleEvent(ctx, { type: event, ...value });
-      return await ctx.view.render({ csrfToken: ctx.csrfToken, uploads: ctx.uploadConfigs, component: ctx.component });
+      return await ctx.view.render({
+        csrfToken: ctx.csrfToken,
+        uploads: ctx.uploadConfigs,
+        component: (c) => ctx.component(c),
+      });
     }
 
     // if cid, then target is a Component

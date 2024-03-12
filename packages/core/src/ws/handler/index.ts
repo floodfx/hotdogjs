@@ -162,6 +162,13 @@ export class WsHandler<T> {
           try {
             const payload = msg[Phx.MsgIdx.payload] as Phx.EventPayload;
             let diff = await handleEvent(this.#ctx!, payload);
+
+            // check redirect
+            if (this.#ctx!.redirectURL) {
+              this.redirect(msg, this.#ctx!.redirectURL);
+              return;
+            }
+
             if (diff instanceof Template) {
               diff = await this.viewToDiff(diff);
             }
@@ -458,6 +465,10 @@ export class WsHandler<T> {
       };
     }
     return tree;
+  }
+
+  async redirect(msg: Phx.Msg<unknown>, to: string) {
+    this.send(PhxReply.redirect(msg, to));
   }
 
   async pushNav(
