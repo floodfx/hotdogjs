@@ -24,6 +24,7 @@ export interface ViewContext<E extends ViewEvent> {
   pushEvent(pushEvent: AnyPushEvent): void;
   pushPatch(path: string, params?: URLSearchParams, replaceHistory?: boolean): void;
   pushRedirect(path: string, params?: URLSearchParams, replaceHistory?: boolean): void;
+  redirect(url: URL): void;
   dispatchEvent(event: Event<E>): void | Promise<void>;
   subscribe(event: E["type"]): void | Promise<void>;
   publish(event: Event<E>): void | Promise<void>;
@@ -42,7 +43,7 @@ export interface ViewContext<E extends ViewEvent> {
 export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewContext<E> {
   #id: string;
   #url: URL;
-  #redirect: { to: string; replace: boolean } | undefined;
+  #redirectEvent: { to: string; replace: boolean } | undefined;
   uploadConfigs: { [key: string]: UploadConfig } = {};
 
   constructor(id: string, url: URL) {
@@ -50,8 +51,8 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
     this.#url = url;
   }
 
-  get redirect(): { to: string; replace: boolean } | undefined {
-    return this.#redirect;
+  get redirectEvent(): { to: string; replace: boolean } | undefined {
+    return this.#redirectEvent;
   }
 
   get id(): string {
@@ -80,9 +81,16 @@ export class HttpViewContext<E extends ViewEvent = AnyEvent> implements ViewCont
 
   pushRedirect(path: string, params?: URLSearchParams, replaceHistory?: boolean) {
     const to = params ? `${path}?${params}` : path;
-    this.#redirect = {
+    this.#redirectEvent = {
       to,
       replace: replaceHistory ?? false,
+    };
+  }
+
+  redirect(url: URL): void {
+    this.#redirectEvent = {
+      to: url.toString(),
+      replace: false,
     };
   }
 
@@ -147,6 +155,8 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   #wsHandler: WsHandler<any>;
   #channels: Record<string, BroadcastChannel> = {};
 
+  redirectURL?: string;
+
   constructor(
     id: string,
     url: URL,
@@ -168,6 +178,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
     // this.#sessionData = sessionData;
     // this.#flash = flash;
   }
+
   allowUpload(name: string, options?: any) {
     this.uploadConfigs[name] = new UploadConfig(name, options);
   }
@@ -242,6 +253,9 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   }
   pushRedirect(path: string, params?: URLSearchParams | undefined, replaceHistory?: boolean | undefined): void {
     this.#wsHandler.pushNav("live_redirect", path, params, replaceHistory);
+  }
+  redirect(url: URL): void {
+    this.redirectURL = url.toString();
   }
   dispatchEvent(event: Event<E>) {
     if (this.connected) {

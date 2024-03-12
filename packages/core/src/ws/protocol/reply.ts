@@ -33,6 +33,7 @@ export namespace PhxReply {
     diff?: { [key: string]: unknown };
     // config?: UploadConfigOptions;
     entries?: { [key: string]: unknown };
+    redirect?: { to: string; replace: boolean };
   };
 
   /**
@@ -124,6 +125,22 @@ export namespace PhxReply {
           config,
           entries,
         },
+      },
+    ];
+  }
+
+  /**
+   * redirect sends a redirect message to the client.
+   */
+  export function redirect(msg: Phx.Msg, to: string): Reply {
+    return [
+      msg[Phx.MsgIdx.joinRef],
+      msg[Phx.MsgIdx.msgRef],
+      msg[Phx.MsgIdx.topic],
+      "phx_reply",
+      {
+        status: "ok",
+        response: { redirect: { to } },
       },
     ];
   }

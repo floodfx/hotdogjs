@@ -1,6 +1,6 @@
 {
   "name": "hotdogjs",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "src/index.ts",
   "description": "Bun-specific LiveView framework",
   "devDependencies": {
