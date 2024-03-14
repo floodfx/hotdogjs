@@ -1,3 +1,4 @@
+export * from "./commands/jsCommands";
 export * from "./component/component";
 export * from "./server/conf";
 export * from "./server/server";
@@ -9,3 +10,4 @@ export * from "./view/view";
 export * from "./ws/handler";
 export * from "./ws/handler/uploadConfig";
 export * from "./ws/handler/uploadEntry";
+
