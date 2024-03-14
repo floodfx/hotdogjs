@@ -1,6 +1,4 @@
 import { ServerWebSocket } from "bun";
-// workaround for global.URL type error
-import { URL } from "node:url";
 // workaround for global.BroadcastChannel type error
 import { BroadcastChannel } from "node:worker_threads";
 import type { Component, ComponentContext } from "../component/component";
@@ -152,7 +150,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   statefulComponents: { [key: string]: Component<any, Template> } = {};
 
   #ws: ServerWebSocket<any>;
-  #wsHandler: WsHandler<any>;
+  #wsHandler: WsHandler<any, any>;
   #channels: Record<string, BroadcastChannel> = {};
 
   redirectURL?: string;
@@ -163,7 +161,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
     view: BaseView<AnyEvent>,
     csrfToken: string,
     ws: ServerWebSocket<any>,
-    wsHandler: WsHandler<any>,
+    wsHandler: WsHandler<any, any>,
     // sessionData: SessionData,
     // flash: FlashAdaptor,
     onSendInfo: (event: Event<AnyEvent>) => void,
