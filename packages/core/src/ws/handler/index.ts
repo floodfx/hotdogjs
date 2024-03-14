@@ -1,5 +1,5 @@
 import { FileSystemRouter, ServerWebSocket } from "bun";
-import type { Component } from "src/component/component";
+import type { Component } from "../../component/component";
 import { Template, Tree, safe } from "../../template";
 import { deepDiff } from "../../template/diff";
 import { WsViewContext, type Event } from "../../view/context";
@@ -10,7 +10,7 @@ import { PhxReply } from "../protocol/reply";
 import { handleEvent } from "./event";
 import { onAllowUpload, onProgressUpload, onUploadBinary } from "./upload";
 
-type WsHandlerOptions = {
+export type WsHandlerOptions = {
   wrapperTemplateFn?: (tmpl: Template) => Template;
   onError?: (err: any) => void;
   debug?: (msg: string) => void;
@@ -21,7 +21,7 @@ type WsHandlerOptions = {
  * managing the lifecycle of the View and any Components that are
  * part of the View.
  */
-export class WsHandler<T> {
+export class WsHandler<R extends object, T> {
   #ws: ServerWebSocket<T>;
   #wrapperTemplateFn?: (tmpl: Template) => Template;
   #onError?: (err: any) => void;
@@ -34,15 +34,16 @@ export class WsHandler<T> {
   #subscriptionIds: { [key: string]: string } = {};
   #lastHB?: number;
   #hbInterval?: ReturnType<typeof setInterval>;
-  // #components;
+  #requestData?: R;
 
-  constructor(ws: ServerWebSocket<T>, router: FileSystemRouter, csrfToken: string, options?: WsHandlerOptions) {
+  constructor(ws: ServerWebSocket<T>, router: FileSystemRouter, csrfToken: string, requestData?: R, options?: WsHandlerOptions) {
     this.#ws = ws;
     this.#router = router;
     this.#csrfToken = csrfToken;
     this.#wrapperTemplateFn = options?.wrapperTemplateFn;
     this.#onError = options?.onError;
     this.#debug = options?.debug;
+    this.#requestData = requestData;
   }
 
   async handleMsgString(msg: string) {
@@ -126,6 +127,7 @@ export class WsHandler<T> {
               ...payloadParams,
               params: matchResult.params,
               query: matchResult.query,
+              ...this.#requestData,
             };
 
             await view.mount(this.#ctx!, mountParams);
