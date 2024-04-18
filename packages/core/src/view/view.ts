@@ -27,7 +27,7 @@ export interface AnyPushEvent extends AnyEvent {}
 /**
  * MountEvent is the event that is sent to the View when it is mounted.
  */
-export type MountEvent<T extends object = {}> = {
+export type MountEvent<R extends Record<string,string> = {}> = {
   /**
    * always "mount"
    */
@@ -52,7 +52,7 @@ export type MountEvent<T extends object = {}> = {
    * the matched route parameters
    */
   params: MatchedRoute["params"];
-} & T;
+} & R;
 
 /**
  * Meta data passed to the render function of a View with additional
@@ -139,8 +139,8 @@ export interface View<E extends ViewEvent, RenderResult> {
  * `BaseView` is the base class for creating a `View`.  You should extend `BaseView` to create
  * your own `View`.
  */
-export abstract class BaseView<E extends ViewEvent> implements View<E, Template> {
-  mount(ctx: ViewContext<E>, e: MountEvent): void | Promise<void> {
+export abstract class BaseView<E extends ViewEvent, R extends Record<string,string> = {}> implements View<E, Template> {
+  mount(ctx: ViewContext<E>, e: MountEvent<R>): void | Promise<void> {
     // noop
   }
   handleParams(ctx: ViewContext<E>, url: URL): void | Promise<void> {
@@ -153,22 +153,22 @@ export abstract class BaseView<E extends ViewEvent> implements View<E, Template>
     // noop
   }
 
-  /**
-   * Helper method to render a file as a template.  This is useful for rendering
-   * a file as a template in a `View`.
-   * @param im the `ImportMeta` of the current file for resolving the file
-   * @param filename the filename to render as a template, defaults to the current file with .html extension replacing the current file extension
-   * @returns a `Template` that represents the file as a template
-   */
-  async renderFile(im: ImportMeta, filename?: string) {
-    // drop file extension of current file and add .html
-    const htmlFile = filename ?? im.file.replace(/\.[^/.]+$/, "") + ".html";
-    const htmlTemplate = await Bun.file(im.dir + "/" + htmlFile).text();
-    if (!htmlTemplate) {
-      throw new Error("missing html template");
-    }
-    return templateFromString(htmlTemplate, this);
-  }
-
   abstract render(meta: RenderMeta<E>): Template | Promise<Template>;
+}
+
+/**
+ * Helper method to render a file as a template.  This is useful for rendering
+ * a file as a template in a `View`.
+ * @param im the `ImportMeta` of the current file for resolving the file
+ * @param filename the filename to render as a template, defaults to the current file with .html extension replacing the current file extension
+ * @returns a `Template` that represents the file as a template
+ */
+export async function renderFile(im: ImportMeta, filename?: string) {
+  // drop file extension of current file and add .html
+  const htmlFile = filename ?? im.file.replace(/\.[^/.]+$/, "") + ".html";
+  const htmlTemplate = await Bun.file(im.dir + "/" + htmlFile).text();
+  if (!htmlTemplate) {
+    throw new Error("missing html template");
+  }
+  return templateFromString(htmlTemplate, this);
 }
