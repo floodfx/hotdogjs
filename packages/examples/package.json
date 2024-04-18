@@ -3,7 +3,8 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts --watch"
+    "dev": "bun run src/index.ts --watch",
+    "start": "hotdogjs"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -11,18 +12,17 @@
     "@types/phoenix": "^1.6.4",
     "@types/phoenix_live_view": "^0.18.4",
     "@types/react": "^18.2.61",
-    "topbar": "^2.0.1"
+    "topbar": "^2.0.1",
+    "phoenix": "^1.7.10",
+    "phoenix_html": "^3.3.3",
+    "phoenix_live_view": "0.20.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "cookie": "^0.6.0",
-    "hotdogjs-core": "file:../core",
-    "hotdogjs-form": "file:../form",
-    "jsx2ttl": "0.2.2",
-    "phoenix": "^1.7.10",
-    "phoenix_html": "^3.3.3",
-    "phoenix_live_view": "0.20.1"
+    "hotdogjs": "file:../core",
+    "@hotdogjs/form": "file:../form"
+
   }
 }

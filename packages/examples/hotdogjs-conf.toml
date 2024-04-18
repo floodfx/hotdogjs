@@ -1,0 +1,2 @@
+# override default configuration settings of hotdogjs
+viewsDir = "src/pages"

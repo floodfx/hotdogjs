@@ -1,6 +1,5 @@
-import { BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
-import { Form, ZodForm, error_tag, form_for, text_input } from "hotdogjs-form";
-import { submit } from "tags/submit";
+import { Form, ZodForm, error_tag, form_for, submit, text_input } from "@hotdogjs/form";
+import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
 import BookDB, { Book, BookSchema } from "../../db/book_db";
 
 type Events =
@@ -59,13 +58,13 @@ export default class Books extends BaseView<Events> {
   render() {
     return html`
       <h1>My Library</h1>
-      
+
       <div id="bookForm">
         ${form_for<Book>("#", this._csrfToken, {
           phx_submit: "save",
           phx_change: "validate",
         })}
-          
+
           <div class="field">
             ${text_input(this.form, "name", { placeholder: "Name", autocomplete: "off", phx_debounce: 1000 })}
             ${error_tag(this.form, "name")}
