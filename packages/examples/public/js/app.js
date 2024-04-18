@@ -16,7 +16,7 @@ var __toESM = (mod, isNodeMode, target) => {
 };
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
 
-// node_modules/topbar/topbar.min.js
+// ../core/node_modules/topbar/topbar.min.js
 var require_topbar_min = __commonJS((exports, module) => {
   (function(window2, document2) {
     function repaint() {
@@ -49,7 +49,7 @@ var require_topbar_min = __commonJS((exports, module) => {
   }).call(exports, window, document);
 });
 
-// node_modules/phoenix_html/priv/static/phoenix_html.js
+// ../core/node_modules/phoenix_html/priv/static/phoenix_html.js
 (function() {
   var PolyfillEvent = eventConstructor();
   function eventConstructor() {
@@ -118,7 +118,7 @@ var require_topbar_min = __commonJS((exports, module) => {
   }, false);
 })();
 
-// node_modules/phoenix/priv/static/phoenix.mjs
+// ../core/node_modules/phoenix/priv/static/phoenix.mjs
 var closure = (value) => {
   if (typeof value === "function") {
     return value;
@@ -772,6 +772,7 @@ var Socket = class {
     this.ref = 0;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || global.WebSocket || LongPoll;
+    this.primaryPassedHealthCheck = false;
     this.longPollFallbackMs = opts.longPollFallbackMs;
     this.fallbackTimer = null;
     this.sessionStore = opts.sessionStorage || global.sessionStorage;
@@ -950,11 +951,10 @@ var Socket = class {
       this.log("transport", `falling back to ${fallbackTransport.name}...`, reason);
       this.off([openRef, errorRef]);
       primaryTransport = false;
-      this.storeSession("phx:longpoll", "true");
       this.replaceTransport(fallbackTransport);
       this.transportConnect();
     };
-    if (this.getSession("phx:longpoll")) {
+    if (this.getSession(`phx:fallback:${fallbackTransport.name}`)) {
       return fallback("memorized");
     }
     this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
@@ -968,12 +968,16 @@ var Socket = class {
     this.onOpen(() => {
       established = true;
       if (!primaryTransport) {
-        return console.log("transport", `established ${fallbackTransport.name} fallback`);
+        if (!this.primaryPassedHealthCheck) {
+          this.storeSession(`phx:fallback:${fallbackTransport.name}`, "true");
+        }
+        return this.log("transport", `established ${fallbackTransport.name} fallback`);
       }
       clearTimeout(this.fallbackTimer);
       this.fallbackTimer = setTimeout(fallback, fallbackThreshold);
       this.ping((rtt) => {
         this.log("transport", "connected to primary after", rtt);
+        this.primaryPassedHealthCheck = true;
         clearTimeout(this.fallbackTimer);
       });
     });
@@ -1105,7 +1109,7 @@ var Socket = class {
   }
   remove(channel) {
     this.off(channel.stateChangeRefs);
-    this.channels = this.channels.filter((c) => c.joinRef() !== channel.joinRef());
+    this.channels = this.channels.filter((c) => c !== channel);
   }
   off(refs) {
     for (let key in this.stateChangeCallbacks) {
@@ -1186,7 +1190,7 @@ var Socket = class {
   }
 };
 
-// node_modules/phoenix_live_view/priv/static/phoenix_live_view.esm.js
+// ../core/node_modules/phoenix_live_view/priv/static/phoenix_live_view.esm.js
 var detectDuplicateIds = function() {
   let ids = new Set;
   let elems = document.querySelectorAll("*[id]");
@@ -5680,10 +5684,10 @@ var TransitionSet = class {
   }
 };
 
-// src/client/app.ts
+// ../core/src/client/app.ts
 var import_topbar = __toESM(require_topbar_min(), 1);
 var csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
-var liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } });
+var liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken }, bindingPrefix: "hd-" });
 import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
 window.addEventListener("phx:page-loading-start", (info) => import_topbar.default.show());
 window.addEventListener("phx:page-loading-stop", (info) => import_topbar.default.hide());

@@ -3,8 +3,7 @@
 
   // Other configuration options...
   "compilerOptions": {
-    "baseUrl": "./src",
-    "rootDir": ".."
+    "baseUrl": "."
   },
-  "include": ["./src/**/*", "../core/src/**/*", "../form/src/**/*"]
+  "include": ["./src/**/*.ts"]
 }

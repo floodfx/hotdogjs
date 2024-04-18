@@ -1,4 +1,3 @@
-import PhotoDB, { Photo, PhotoSchema } from "db/photo_db";
 import {
   BaseView,
   MountEvent,
@@ -9,8 +8,9 @@ import {
   live_file_input,
   live_img_preview,
 } from "hotdogjs-core";
-import { Form, ZodForm, form_for } from "hotdogjs-form";
-import { submit } from "tags/submit";
+import { Form, ZodForm, form_for, submit } from "hotdogjs-form";
+import PhotoDB, { PhotoSchema, type Photo } from "../../db/photo_db";
+
 
 type PhotosEvents =
   | ({ type: "validate" } & Partial<Photo>)
@@ -97,7 +97,7 @@ export default class Photos extends BaseView<PhotosEvents> {
     }
   }
 
-  render(meta: RenderMeta) {
+  render(meta: RenderMeta<PhotosEvents>) {
     const { uploads } = meta;
     return html`
       <h2>My Photo Groups</h2>
@@ -113,15 +113,15 @@ export default class Photos extends BaseView<PhotosEvents> {
           <!-- file input / drag and drop -->
           <div phx-drop-target="${uploads.photos.ref}" style="border: 2px dashed #ccc; padding: 10px; margin: 10px 0;">
             ${live_file_input(uploads.photos, "file-input file-input-bordered w-full max-w-xs")}
-            or drag and drop files here 
-          </div>        
+            or drag and drop files here
+          </div>
           <!-- help text -->
           <div style="font-size: 10px; padding-bottom: 3rem">
             Add up to ${uploads.photos.max_entries} photos
             (max ${uploads.photos.max_file_size / (1024 * 1024)} MB each)
           </div>
         </div>
-        
+
         <!-- any errors from the upload -->
         ${uploads.photos.errors.map((error: string) => html`<p class="invalid-feedback">${error}</p>`)}
 
@@ -135,10 +135,10 @@ export default class Photos extends BaseView<PhotosEvents> {
           disabled: uploads.photos.errors.length > 0,
         })}
       </form>
-      
+
       <!-- render the photos  -->
       <ul id="photo_groups_list" phx-update="prepend">
-        ${this.photos.map(renderPhoto)}          
+        ${this.photos.map(renderPhoto)}
       </ul>
     `;
   }
