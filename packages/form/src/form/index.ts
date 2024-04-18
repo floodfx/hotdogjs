@@ -38,7 +38,10 @@ export interface Form<T> {
   reset(): void;
 }
 
-export class ZodForm<T extends {}> implements Form<T> {
+/**
+ * A Form implementation that uses Zod for validation.
+ */
+export class ZodForm<T extends object> implements Form<T> {
   #schema: SomeZodObject;
   #data: Partial<T>;
   #action?: string;
