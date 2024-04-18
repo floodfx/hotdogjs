@@ -12,6 +12,7 @@ export type ServerInfo = {
   wsHandler: WsHandler<any, any>;
 };
 
+
 export class Server {
   #conf: Conf;
   #router?: FileSystemRouter;
@@ -33,15 +34,10 @@ export class Server {
   async viewRouter<R extends object>(
     req: Request,
     requestDataExtractor: (r: Request) => Promise<R> = async () => ({} as R),
-    middleware: (req: Request) => Promise<Response | null> = async () => null
   ): Promise<Response | null> {
     const matchedRoute = this.router.match(req);
     if (matchedRoute) {
-      const middlewareResp = await middleware(req);
-      if (middlewareResp) {
-        return middlewareResp;
-      }
-      const resolver = this.#conf.pageTemplate ?? this.loadPublicIndexTemplate;
+      const resolver = this.#conf.viewTemplateResolver ?? this.loadPublicIndexTemplate;
       const url = new URL(req.url);
       const requestData = await requestDataExtractor(req);
       return renderHttpView(url, matchedRoute, requestData, await resolver(matchedRoute, this.#conf), {});
@@ -54,7 +50,7 @@ export class Server {
     if (url.pathname === "/live/websocket") {
       // _csrf_token is required for websocket connections
       // and automatically added to the query params by the client javascript
-      const csrfToken = url.searchParams.get("_csrf_token") ?? "";      
+      const csrfToken = url.searchParams.get("_csrf_token") ?? "";
       if (csrfToken) {
         const requestData = await requestDataExtractor(req);
         return [true, { csrfToken, ...(requestData as R)}];
@@ -129,7 +125,7 @@ export class Server {
 
 /**
  * renderHttpView is a helper function to render a View page server.
- * @param url the URL of the request  
+ * @param url the URL of the request
  * @param matchedRoute the MatchedRoute from the FileSystemRouter
  * @param requestData the request data to pass to the View
  * @param pageTemplate the html template for the page

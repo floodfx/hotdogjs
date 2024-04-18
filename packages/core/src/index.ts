@@ -1,6 +1,7 @@
 export * from "./commands/jsCommands";
 export * from "./component/component";
 export * from "./server/conf";
+export * from "./server/default";
 export * from "./server/server";
 export * from "./tags/live_file_input";
 export * from "./tags/live_img_preview";
