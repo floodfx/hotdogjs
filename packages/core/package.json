@@ -1,6 +1,6 @@
 {
   "name": "hotdogjs",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "src/index.ts",
   "description": "Hot-reloading, single-file LiveViews at the speed of Bun",
   "dependencies": {
@@ -21,6 +21,7 @@
   },
   "bin": {
     "hotdogjs": "./src/server/start.ts",
-    "hotdogjs-watch": "./src/server/watch.ts"
+    "hotdogjs-watch": "./src/server/watch.ts",
+    "hotdogjs-build": "./src/server/build.ts"
   }
 }
