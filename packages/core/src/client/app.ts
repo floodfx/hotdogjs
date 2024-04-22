@@ -8,7 +8,8 @@ import { LiveSocket } from "phoenix_live_view";
 import topbar from "topbar";
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
-let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken }, bindingPrefix: "hd-" });
+let url = (window as any).HOTDOG_WS_URL ?? '/live'
+let liveSocket = new LiveSocket(url, Socket, { params: { _csrf_token: csrfToken }, bindingPrefix: "hd-" });
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });

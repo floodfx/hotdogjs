@@ -115,6 +115,11 @@ export class Server {
     return await Bun.build({
       entrypoints: [this.#conf.clientFile],
       outdir: this.#conf.clientDir,
+      define: {
+        // define replacement for placeholder in client js with the websocket url
+        // replace with environment variable if set, otherwise default to /live
+        "window.HOTDOG_WS_URL": process.env.HOTDOG_WS_URL ?? "/live",
+      }
     });
   }
 
