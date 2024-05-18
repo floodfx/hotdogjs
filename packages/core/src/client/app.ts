@@ -7,14 +7,21 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "topbar";
 
+// Read Configuration
 let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
-let url = (window as any).HOTDOG_WS_URL ?? '/live'
+let wsBaseURL = document.querySelector("meta[name='websocket-base-url']")?.getAttribute("content") ?? "";
+let barColor = document.querySelector("meta[name='progress-bar-color']")?.getAttribute("content") ?? "#555555";
+let shadowColor =
+  document.querySelector("meta[name='progress-bar-shadow-color']")?.getAttribute("content") ?? "#0000004d";
+
+// Configure LiveSocket
+let url = wsBaseURL + "/live";
 let liveSocket = new LiveSocket(url, Socket, { params: { _csrf_token: csrfToken }, bindingPrefix: "hd-" });
 
 // Show progress bar on live navigation and form submits
-topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
-window.addEventListener("phx:page-loading-start", (info) => topbar.show());
-window.addEventListener("phx:page-loading-stop", (info) => topbar.hide());
+topbar.config({ barColors: { 0: barColor }, shadowColor: shadowColor });
+window.addEventListener("phx:page-loading-start", () => topbar.show());
+window.addEventListener("phx:page-loading-stop", () => topbar.hide());
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();
