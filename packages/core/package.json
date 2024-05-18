@@ -1,6 +1,6 @@
 {
   "name": "hotdogjs",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "main": "src/index.ts",
   "description": "Hot-reloading, single-file LiveViews at the speed of Bun",
   "dependencies": {
