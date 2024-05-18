@@ -16,7 +16,7 @@ const conf = new Conf(import.meta, confOpts);
 
 const server = new Server(conf);
 // build client js when starting (or move this to a build step)
-const build = await server.buildClientJavascript();
+const build = await server.maybeBuildClientJavascript();
 if (!build.success) {
   console.error("Failed to build client js", build.logs);
   throw new Error("Failed to build client js");

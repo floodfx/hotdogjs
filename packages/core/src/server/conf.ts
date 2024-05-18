@@ -9,55 +9,113 @@ export type ConfOptions = {
   publicDir: string;
 
   /**
+   * File where the client side code is located.
+   * We use the default client javascript if not provided.
+   */
+  clientJSSourceFile: string;
+
+  /**
    * Directory where client js should be built to.
    * Defaults to "/public/js"
    *
    */
-  clientDir: string;
+  clientDestDir: string;
 
   /**
-   * Directory where views are served from.
+   * Build (or rebuild) client js when starting the server.
+   * defaults to true
+   */
+  buildClientJS: boolean;
+
+  /**
+   * Directory where views are served from relative to the server.
    */
   viewsDir: string;
 
   /**
-   * File where the client side code is located.
-   */
-  clientFile: string;
-
-  /**
-   * Static assets path prefix
+   * Prefix required to access static files when referenced from
+   * HTML. For example, to access a file at: `/public/img/image.png`
+   * the code would use `<img src="/static/img/image.png" />`.
+   *
+   * Defaults to "/static"
    */
   staticPrefix: string;
 
   /**
-   * Files to exclude from static serving
+   * Files in public that should not be served as static files. For example,
+   * templates that should be rendered by the server.
+   *
+   * Defaults to ["index.html"]
    */
   staticExcludes: string[];
 
   /**
-   * override how the page template is resolved
+   * A function that defines how to resolve the view template for a given route.
+   * This is useful for customizing the view template based on the route.
    */
   viewTemplateResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
+
+  /**
+   * Base URL for the websocket (allows websocket to be served from a different domain)
+   * Defaults to empty string (e.g. "") which means the websocket is served
+   * from the same domain as the server.
+   */
+  wsBaseUrl: string;
 };
 
+/**
+ * Configuration for the Hotdog server.
+ *
+ * Set any or all of the following environment variables to override the configuration:
+ * HD_PUBLIC_DIR - overrides publicDir
+ * HD_CLIENT_JS_FILE - overrides clientFile
+ * HD_CLIENT_JS_DEST_DIR - overrides clientDir
+ * HD_BUILD_CLIENT_JS - overrides buildClientJS
+ * HD_VIEWS_DIR - overrides viewsDir
+ * HD_STATIC_PREFIX - overrides staticPrefix
+ * HD_STATIC_EXCLUDES - overrides staticExcludes
+ * HD_WS_BASE_URL - overrides wsBaseUrl
+ */
 export class Conf {
   publicDir: string;
-  pagesDir: string;
-  clientFile: string;
-  clientDir: string;
+  viewsDir: string;
+  clientJSSourceFile: string;
+  clientJSDestDir: string;
+  buildClientJS: boolean;
   staticPrefix: string;
   staticExcludes: string[];
+  wsBaseUrl: string;
   viewTemplateResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
 
   constructor(serverImportMeta: ImportMeta, options: Partial<ConfOptions> = {}) {
     const relativeDir = serverImportMeta.dir;
-    this.publicDir = options.publicDir ?? process.cwd() + "/public";
-    this.pagesDir = options.viewsDir ?? process.cwd() + "/views";
-    this.clientFile = options.clientFile ?? relativeDir + "/../client/app.ts";
-    this.clientDir = options.clientDir ?? this.publicDir + "/js";
-    this.staticPrefix = options.staticPrefix ?? "/static";
-    this.staticExcludes = options.staticExcludes ?? ["index.html"];
+    this.publicDir = getOrElse("HD_PUBLIC_DIR", options.publicDir ?? process.cwd() + "/public");
+    this.viewsDir = getOrElse("HD_VIEWS_DIR", options.viewsDir ?? process.cwd() + "/views");
+    this.clientJSSourceFile = getOrElse("HD_CLIENT_JS_FILE", options.clientJSSourceFile ?? relativeDir + "/../client/app.ts");
+    this.clientJSDestDir = getOrElse("HD_CLIENT_JS_DEST_DIR", options.clientDestDir ?? this.publicDir + "/js");
+    this.buildClientJS = getOrElse("HD_BUILD_CLIENT_JS", options.buildClientJS ?? true);
+    this.staticPrefix = getOrElse("HD_STATIC_PREFIX", options.staticPrefix ?? "/static");
+    this.staticExcludes = getOrElse("HD_STATIC_EXCLUDES", options.staticExcludes ?? ["index.html"]);
     this.viewTemplateResolver = options.viewTemplateResolver;
+    this.wsBaseUrl = getOrElse("HD_WS_BASE_URL", options.wsBaseUrl ?? "");
   }
+
+
+}
+
+function getOrElse<T extends string | string[] | boolean>(key: string, defaultVal: T): T {
+  if (typeof defaultVal === "boolean") {
+    return (process.env[key] === "true" ?? defaultVal) as T;
+  }
+  if (typeof defaultVal === "string") {
+    return (process.env[key] ?? defaultVal) as T;
+  }
+  if (typeof defaultVal === "object" && Array.isArray(defaultVal)) {
+    const val = process.env[key];
+    if (val !== undefined) {
+      return (val.split(",") as T);
+    }
+    return defaultVal as T;
+  }
+  return (process.env[key] ?? defaultVal) as T;
 }
