@@ -9,7 +9,10 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0",
-    "hotdogjs": "latest"
+    "hotdogjs": "^0.2.0"
+  },
+  "dependencies": {
+    "hotdogjs": "^0.2.0"
   },
   "license": "MIT"
 }

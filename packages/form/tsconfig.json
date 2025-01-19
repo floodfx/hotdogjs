@@ -5,5 +5,5 @@
   "compilerOptions": {
     "baseUrl": "."
   },
-  "include": ["./src/index.ts", "./src/**/*.ts"]
+  "include": ["./src/**/*.ts"]
 }
