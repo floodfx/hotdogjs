@@ -22,10 +22,10 @@ export type ConfOptions = {
   clientDestDir: string;
 
   /**
-   * Build (or rebuild) client js when starting the server.
-   * defaults to true
+   * Do not build (or rebuild) client js when starting the server.
+   * defaults to false
    */
-  buildClientJS: boolean;
+  skipBuildingClientJS: boolean;
 
   /**
    * Directory where views are served from relative to the server.
@@ -70,7 +70,7 @@ export type ConfOptions = {
  * HD_PUBLIC_DIR - overrides publicDir
  * HD_CLIENT_JS_FILE - overrides clientFile
  * HD_CLIENT_JS_DEST_DIR - overrides clientDir
- * HD_BUILD_CLIENT_JS - overrides buildClientJS
+ * HD_SKIP_BUILD_CLIENT_JS - overrides skipBuildingClientJS
  * HD_VIEWS_DIR - overrides viewsDir
  * HD_STATIC_PREFIX - overrides staticPrefix
  * HD_STATIC_EXCLUDES - overrides staticExcludes
@@ -81,7 +81,7 @@ export class Conf {
   viewsDir: string;
   clientJSSourceFile: string;
   clientJSDestDir: string;
-  buildClientJS: boolean;
+  skipBuildingClientJS: boolean;
   staticPrefix: string;
   staticExcludes: string[];
   wsBaseUrl: string;
@@ -91,16 +91,17 @@ export class Conf {
     const relativeDir = serverImportMeta.dir;
     this.publicDir = getOrElse("HD_PUBLIC_DIR", options.publicDir ?? process.cwd() + "/public");
     this.viewsDir = getOrElse("HD_VIEWS_DIR", options.viewsDir ?? process.cwd() + "/views");
-    this.clientJSSourceFile = getOrElse("HD_CLIENT_JS_FILE", options.clientJSSourceFile ?? relativeDir + "/../client/app.ts");
+    this.clientJSSourceFile = getOrElse(
+      "HD_CLIENT_JS_FILE",
+      options.clientJSSourceFile ?? relativeDir + "/../client/app.ts"
+    );
     this.clientJSDestDir = getOrElse("HD_CLIENT_JS_DEST_DIR", options.clientDestDir ?? this.publicDir + "/js");
-    this.buildClientJS = getOrElse("HD_BUILD_CLIENT_JS", options.buildClientJS ?? true);
+    this.skipBuildingClientJS = getOrElse("HD_SKIP_BUILDING_CLIENT_JS", options.skipBuildingClientJS ?? false);
     this.staticPrefix = getOrElse("HD_STATIC_PREFIX", options.staticPrefix ?? "/static");
     this.staticExcludes = getOrElse("HD_STATIC_EXCLUDES", options.staticExcludes ?? ["index.html"]);
     this.viewTemplateResolver = options.viewTemplateResolver;
     this.wsBaseUrl = getOrElse("HD_WS_BASE_URL", options.wsBaseUrl ?? "");
   }
-
-
 }
 
 function getOrElse<T extends string | string[] | boolean>(key: string, defaultVal: T): T {
@@ -113,7 +114,7 @@ function getOrElse<T extends string | string[] | boolean>(key: string, defaultVa
   if (typeof defaultVal === "object" && Array.isArray(defaultVal)) {
     const val = process.env[key];
     if (val !== undefined) {
-      return (val.split(",") as T);
+      return val.split(",") as T;
     }
     return defaultVal as T;
   }
