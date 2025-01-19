@@ -31,7 +31,7 @@ export default class Index extends BaseView<AnyEvent> {
       <div>Not Checked ${checkbox}</div>
       <div>Checked ${component(new Checkbox({ id: 2, checked: true }))}</div>
 
-      <button phx-click="redirect-me">Redirect</button>
+      <button hd-click="redirect-me">Redirect</button>
     `;
   }
 }

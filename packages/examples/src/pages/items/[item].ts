@@ -1,4 +1,4 @@
-import { BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
+import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
 
 type Events =
   | {

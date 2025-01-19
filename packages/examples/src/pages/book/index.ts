@@ -60,9 +60,9 @@ export default class Books extends BaseView<Events> {
       <h1>My Library</h1>
 
       <div id="bookForm">
-        ${form_for<Book>("#", this._csrfToken, {
-          phx_submit: "save",
-          phx_change: "validate",
+        ${form_for("#", this._csrfToken, {
+          onSubmit: "save",
+          onChange: "validate",
         })}
 
           <div class="field">
@@ -93,7 +93,7 @@ function renderBook(b: Book) {
     <div id="${b.id}" style="margin-top: 1rem; ${color}">
       ${emoji} <span>${b.name}</span> by <span>${b.author}</span>
       <div>
-        <button phx-click="toggle-checkout" phx-value-id="${b.id}" phx-disable-with="Updating...">
+        <button hd-click="toggle-checkout" hd-value-id="${b.id}" hd-disable-with="Updating...">
           ${b.checked_out ? "Return" : "Check Out"}
         </button>
       </div>

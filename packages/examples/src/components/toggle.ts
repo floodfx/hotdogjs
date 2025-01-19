@@ -1,4 +1,4 @@
-import { BaseComponent, html, type ComponentContext } from "hotdogjs-core";
+import { BaseComponent, html, type ComponentContext } from "hotdogjs";
 
 export class Checkbox extends BaseComponent {
   checked: boolean;
@@ -29,7 +29,7 @@ export class Checkbox extends BaseComponent {
       type="checkbox"
       ${this.checked ? "checked" : ""}
       data-preloaded=${this.preloaded}
-      phx-click="toggle"
-      phx-target="${this.cid}" /> `;
+      hd-click="toggle"
+      hd-target="${this.cid}" /> `;
   }
 }

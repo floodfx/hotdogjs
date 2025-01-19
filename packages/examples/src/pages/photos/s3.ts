@@ -3,11 +3,14 @@ import {
   BaseView,
   MountEvent,
   RenderMeta,
+  S3SignFormUpload,
   UploadEntry,
   ViewContext,
   html,
   live_file_input,
   live_img_preview,
+  type ExternalMetadata,
+  type ExternalParams,
 } from "hotdogjs";
 import PhotoDB, { PhotoSchema, type Photo } from "../../db/photo_db";
 
@@ -17,6 +20,29 @@ type PhotosEvents =
   | { type: "toggle-favorite"; id: string }
   | { type: "cancel"; config_name: string; ref: string }
   | { type: "photo-change" };
+
+const bucket = "hotdogjs-uploads";
+const s3_url = `https://${bucket}.s3.amazonaws.com`;
+const region = process.env.AWS_REGION ?? "us-west-2";
+
+async function presignUpload(entry: ExternalParams): Promise<ExternalMetadata> {
+  console.log("Presigning upload", entry);
+  const fields = await S3SignFormUpload({
+    bucket,
+    acl: "public-read",
+    key: `${entry.uuid}/${entry.name}`,
+    contentType: entry.type,
+    expiresSeconds: 60 * 60, // 1 hour
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    region,
+  });
+  return {
+    uploader: "S3" as const,
+    key: entry.name,
+    url: s3_url,
+    fields,
+  };
+}
 
 export default class Photos extends BaseView<PhotosEvents> {
   _csrfToken: string = "";
@@ -34,6 +60,7 @@ export default class Photos extends BaseView<PhotosEvents> {
       accept: [".png", ".jpg", ".jpeg", ".gif"], // only allow images
       max_entries: 3, // only 3 entries per upload
       max_file_size: 5 * 1024 * 1024, // 5MB
+      external: presignUpload,
     });
   }
 
@@ -51,11 +78,12 @@ export default class Photos extends BaseView<PhotosEvents> {
 
         // save the photos
         completed.forEach((entry: UploadEntry) => {
+          console.log("Completed entry", entry);
           const photo = PhotoDB.insert({
             id: entry.uuid,
-            external: false,
             mime: entry.type,
-            data: entry.data,
+            external: true,
+            url: `${s3_url}/${entry.uuid}/${entry.name}`,
             favorite: false,
           });
           if (photo) {
@@ -66,6 +94,7 @@ export default class Photos extends BaseView<PhotosEvents> {
         // Yay! We've successfully saved the photo, so we can consume (i.e. "remove")
         // the uploaded entries from the "photos" upload config
         ctx.consumeUploadedEntries("photos", async (path, entry) => {
+          console.log("Consuming entry", path, entry);
           // we could create thumbnails, scan for viruses, etc.
           // but for now move the data from the temp file (meta.path) to a public directory
           // e.g. createThumbail(entry);
@@ -166,10 +195,9 @@ function renderEntry(entry: UploadEntry) {
 
 // Render a photo group with a list of photos
 function renderPhoto(photo: Photo) {
-  const url = photo.external ? photo.url : `data:${photo.mime};base64,${Buffer.from(photo.data!).toString("base64")}`;
   return html`<li id="${photo.id}">
     <div class="relative flex">
-      <img class="object-cover h-48 w-96" src="${url}" />
+      <img class="object-cover h-48 w-96" src="${photo.url}" />
       <button
         class="absolute bottom-2 left-2"
         hd-click="toggle-favorite"

@@ -1,4 +1,4 @@
-import { BaseComponent, BaseView, MountEvent, ViewContext, html, type RenderMeta } from "hotdogjs-core";
+import { BaseComponent, BaseView, MountEvent, ViewContext, html, type RenderMeta } from "hotdogjs";
 
 type Event = { type: "refresh" };
 
@@ -47,7 +47,7 @@ export default class Dashboard extends BaseView<Event> {
         ${component(new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount)))}
         ${component(new Stat("🌟 Rating", ratingToStars(this.rating)))}
       </div>
-      <button phx-click="refresh">↻ Refresh</button>
+      <button hd-click="refresh">↻ Refresh</button>
     `;
   }
 

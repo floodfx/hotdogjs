@@ -1,4 +1,4 @@
-import { BaseView, MountEvent, ViewContext, html } from "hotdogjs-core";
+import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
 
 type Event = { type: "inc" } | { type: "dec" };
 
@@ -30,8 +30,8 @@ export default class Counter extends BaseView<Event> {
           <div class="stat-value">${this.count}</div>
           <div class="stat-desc">click the buttons to adjust</div>
           <div class="stat-actions">
-            <button class="btn btn-sm" phx-click="dec">-</button>
-            <button class="btn btn-sm" phx-click="inc">+</button>
+            <button class="btn btn-sm" hd-click="dec">-</button>
+            <button class="btn btn-sm" hd-click="inc">+</button>
           </div>
         </div>
       </div>
