@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { readFileSync } from "node:fs";
 import { mime } from "../../mime";
 // import type { PhxEventUpload } from "../protocol/phx";
+import type { AllowUploadEntry } from "../protocol/payloads";
 import { UploadConfig } from "./uploadConfig";
 
 export type PhxEventUpload = {
@@ -80,7 +81,7 @@ export class DefaultUploadEntry implements UploadEntry {
   #config: UploadConfig; // the parent upload config
   #tempFile?: string; // the temp file location where the file is stored
 
-  constructor(upload: PhxEventUpload, config: UploadConfig) {
+  constructor(upload: PhxEventUpload | AllowUploadEntry, config: UploadConfig) {
     this.cancelled = false;
     this.last_modified = upload.last_modified;
     this.name = upload.name;

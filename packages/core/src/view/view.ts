@@ -1,9 +1,9 @@
-import { MatchedRoute } from "bun";
+import { type MatchedRoute } from "bun";
 import { URL } from "node:url";
 import { type Component } from "../component/component";
 import { Template, templateFromString } from "../template";
 import { UploadConfig } from "../ws/handler/uploadConfig";
-import { ViewContext } from "./context";
+import { type ViewContext } from "./context";
 
 /**
  * All ViewEvents must have a type property and can have any other properties.
@@ -27,7 +27,7 @@ export interface AnyPushEvent extends AnyEvent {}
 /**
  * MountEvent is the event that is sent to the View when it is mounted.
  */
-export type MountEvent<R extends Record<string,string> = {}> = {
+export type MountEvent<R extends Record<string, string> = {}> = {
   /**
    * always "mount"
    */
@@ -139,7 +139,9 @@ export interface View<E extends ViewEvent, RenderResult> {
  * `BaseView` is the base class for creating a `View`.  You should extend `BaseView` to create
  * your own `View`.
  */
-export abstract class BaseView<E extends ViewEvent, R extends Record<string,string> = {}> implements View<E, Template> {
+export abstract class BaseView<E extends ViewEvent, R extends Record<string, string> = {}>
+  implements View<E, Template>
+{
   mount(ctx: ViewContext<E>, e: MountEvent<R>): void | Promise<void> {
     // noop
   }
@@ -163,12 +165,12 @@ export abstract class BaseView<E extends ViewEvent, R extends Record<string,stri
  * @param filename the filename to render as a template, defaults to the current file with .html extension replacing the current file extension
  * @returns a `Template` that represents the file as a template
  */
-export async function renderFile(im: ImportMeta, filename?: string) {
+export async function renderFile(data: any, im: ImportMeta, filename?: string) {
   // drop file extension of current file and add .html
   const htmlFile = filename ?? im.file.replace(/\.[^/.]+$/, "") + ".html";
   const htmlTemplate = await Bun.file(im.dir + "/" + htmlFile).text();
   if (!htmlTemplate) {
     throw new Error("missing html template");
   }
-  return templateFromString(htmlTemplate, this);
+  return templateFromString(htmlTemplate, data);
 }

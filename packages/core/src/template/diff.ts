@@ -1,4 +1,4 @@
-import { Tree } from ".";
+import { type Tree } from ".";
 
 // returns a Parts tree that only contains the differences between
 // the oldParts tree and the newParts tree

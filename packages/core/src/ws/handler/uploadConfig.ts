@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { UploadEntry } from "./uploadEntry";
+import type { SignFormUpload } from "src/uploader/s3";
+import type { UploadEntry } from "./uploadEntry";
 
 /**
  * UploadConfig contains configuration and entry related details for uploading files.
@@ -47,6 +48,28 @@ export interface UploadConfig {
 }
 
 /**
+ * ExternalMetadata contains the metadata required for uploading files to an external service.
+ */
+export type ExternalMetadata = {
+  /**
+   * The uploader to use for the file.
+   * Currently only "S3" is supported.
+   */
+  uploader: "S3";
+  key: string;
+  url: string;
+  fields: SignFormUpload;
+};
+
+export type ExternalParams = {
+  uuid: string;
+  type: string;
+  name: string;
+};
+
+export type ExternalFn = (entry: ExternalParams) => Promise<ExternalMetadata>;
+
+/**
  * Options for creating a new upload config.
  */
 export type UploadConfigOptions = {
@@ -73,12 +96,19 @@ export type UploadConfigOptions = {
    * The size of each chunk in bytes. Defaults to 64kb.
    */
   chunk_size?: number;
+
+  /**
+   * A function that returns the presigned url metadata for the upload.
+   */
+  external?: ExternalFn;
 };
 
 /**
  * UploadConfig contains configuration and entry related details for uploading files.
  */
 export class UploadConfig implements UploadConfig {
+  external: ExternalFn | undefined;
+
   constructor(name: string, options?: UploadConfigOptions) {
     this.name = name;
     this.accept = options?.accept ?? [];
@@ -89,6 +119,7 @@ export class UploadConfig implements UploadConfig {
     this.entries = [];
     this.ref = `phx-${randomUUID()}`;
     this.errors = [];
+    this.external = options?.external;
   }
 
   /**
