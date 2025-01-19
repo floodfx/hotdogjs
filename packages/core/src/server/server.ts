@@ -1,4 +1,4 @@
-import { FileSystemRouter, MatchedRoute, type BuildOutput, type BunFile, type WebSocketHandler } from "bun";
+import { FileSystemRouter, type BuildOutput, type BunFile, type MatchedRoute, type WebSocketHandler } from "bun";
 import { randomUUID } from "crypto";
 import type { Component, ComponentContext } from "../component/component";
 import { html, safe, templateFromString, type Template } from "../template";
@@ -12,6 +12,8 @@ export type ServerInfo = {
   wsHandler: WsHandler<any, any>;
 };
 
+export type RequestDataExtractor<R extends object> = (r: Request) => Promise<R>;
+const emptyRequestDataExtractor: RequestDataExtractor<any> = async () => ({});
 
 export class Server {
   #conf: Conf;
@@ -33,7 +35,7 @@ export class Server {
 
   async viewRouter<R extends object>(
     req: Request,
-    requestDataExtractor: (r: Request) => Promise<R> = async () => ({} as R),
+    requestDataExtractor: RequestDataExtractor<R> = emptyRequestDataExtractor
   ): Promise<Response | null> {
     const matchedRoute = this.router.match(req);
     if (matchedRoute) {
@@ -45,7 +47,10 @@ export class Server {
     return null;
   }
 
-  async wsRouter<R extends object>(req: Request, requestDataExtractor: (r: Request) => Promise<R> = async () => ({} as R),): Promise<[boolean, R & { csrfToken: string } | undefined]> {
+  async wsRouter<R extends object>(
+    req: Request,
+    requestDataExtractor: RequestDataExtractor<R> = emptyRequestDataExtractor
+  ): Promise<[boolean, (R & { csrfToken: string }) | undefined]> {
     const url = new URL(req.url);
     if (url.pathname === "/live/websocket") {
       // _csrf_token is required for websocket connections
@@ -53,7 +58,7 @@ export class Server {
       const csrfToken = url.searchParams.get("_csrf_token") ?? "";
       if (csrfToken) {
         const requestData = await requestDataExtractor(req);
-        return [true, { csrfToken, ...(requestData as R)}];
+        return [true, { csrfToken, ...(requestData as R) }];
       } else {
         console.warn(`No "_csrf_token" found in query params`);
       }
@@ -108,7 +113,7 @@ export class Server {
   }
 
   async maybeBuildClientJavascript(): Promise<BuildOutput> {
-    if (!this.#conf.buildClientJS) {
+    if (this.#conf.skipBuildingClientJS) {
       return { success: true, logs: [], outputs: [] };
     }
     const file = Bun.file(this.#conf.clientJSSourceFile);
@@ -118,11 +123,6 @@ export class Server {
     return await Bun.build({
       entrypoints: [this.#conf.clientJSSourceFile],
       outdir: this.#conf.clientJSDestDir,
-      define: {
-        // define replacement for placeholder in client js with the websocket url
-        // replace with environment variable if set, otherwise default to /live
-        "window.HOTDOG_WS_URL": process.env.HOTDOG_WS_URL ?? "/live",
-      },
     });
   }
 
@@ -201,7 +201,7 @@ async function renderHttpView<R extends object, T extends object>(
   const content = html`<${htmlTag} data-phx-main="true" data-phx-session="" data-phx-static="" id="phx-${viewId}">
     ${safe(tmpl)}
   </${htmlTag}>`;
-  const template = templateFromString(pageTemplate, { content, ...templateData, csrfToken, websocketBaseUrl});
+  const template = templateFromString(pageTemplate, { content, ...templateData, csrfToken, websocketBaseUrl });
   return new Response(template.toString(), {
     headers: {
       "Content-Type": "text/html",
