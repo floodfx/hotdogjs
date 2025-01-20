@@ -1,8 +1,10 @@
-# 🌭 Hotdog
+# 🌭 Hotdog JS
 
-What goes well with [Bun](https://bun.sh)?  Hotdogs!
+What goes well with [Bun](https://bun.sh)? Hotdogs! 🌭🌭🌭
 
-Hotdogjs is a server-side front-end framework built specifically for [Bun](https://bun.sh).  Hotdogjs supports both server rendering and client inteactivity in a single programming model that is a departure from the decade old Single Page Application (SPA) model popularized by React.  Hotdogjs is built on the following principles:
+Hotdogjs is an event-based web framework built specifically for [Bun](https://bun.sh) based on the LiveView paradigm popularized by [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html).  In short, when a user interacts with a page (e.g. clicks a button, fills out a form, etc.), the client sends events to the server which can update the server state and then sends a diff back to the client that is automatically applied to the DOM.  This results in a very fast user experience with very small payloads in both directions and a very simple yet powerful programming model for developers.  Server events can also trigger server-side state and, relatedly, client-side page updates.
+
+Hotdogjs supports both server rendering and client interactivity in a single programming model that is a departure from the decade old Single Page Application (SPA) model popularized by React.  Hotdogjs is built on the following principles:
  * **Server-side rendering** - HTML is rendered on the server and sent to the client
  * **Client-side interactivity** - client-side interactivity is achieved by sending client-events to the server, updating the server state, and repling with diffs to the client which updates the DOM which results in very small payloads in both directions, resulting in a much faster user experience
  * **No client-side routing** - we use the browser's native routing along server-side routing to determine the page to render
@@ -39,9 +41,11 @@ Bun is fast as heck and, while is compatable with nodejs APIs, it offers Bun spe
    * Web Workers
 
 ## Why should you use Hotdogjs?
+ * You get the power of server-side routing, templating, state management, and security and want a framework that isn't shoehorned into a server-first approach
+ * You have heard about the power of Phoenix LiveViews and wished there was a javascript implementation
 
 ## Why should you NOT use Hotdogjs?
- * Hotdogjs is not ideal for static sites. It requires a server to run 
+ * Hotdogjs is not ideal for static sites. It requires a server to run
 
 
 
