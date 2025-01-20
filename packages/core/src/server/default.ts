@@ -1,3 +1,4 @@
+import type { Serve } from "bun";
 import { Conf, type ConfOptions } from "./conf";
 import { Server, type ServerInfo } from "./server";
 
@@ -5,8 +6,8 @@ import { Server, type ServerInfo } from "./server";
 const hdTomlUrl = process.cwd() + "/hotdogjs-conf.toml";
 const hdToml = Bun.file(hdTomlUrl);
 var confOpts: Partial<ConfOptions> = {};
-if(await hdToml.exists()) {
-  const toml = await import(hdTomlUrl)
+if (await hdToml.exists()) {
+  const toml = await import(hdTomlUrl);
   confOpts = toml;
 }
 
@@ -15,10 +16,14 @@ const conf = new Conf(import.meta, confOpts);
 
 const server = new Server(conf);
 // build client js when starting (or move this to a build step)
-await server.buildClientJavascript();
+const build = await server.maybeBuildClientJavascript();
+if (!build.success) {
+  console.error("Failed to build client js", build.logs);
+  throw new Error("Failed to build client js");
+}
 
-// start the bun server
-const webServer = Bun.serve<ServerInfo>({
+// default configuration for the server
+export const defaultServeConfig = {
   async fetch(req, webServer) {
     // view routes
     const v = await server.viewRouter(req);
@@ -56,7 +61,7 @@ const webServer = Bun.serve<ServerInfo>({
   // web server options
   hostname: process.env.HOSTNAME || "localhost",
   port: process.env.PORT ? parseInt(process.env.PORT) : 3000,
-  maxRequestBodySize: process.env.MAX_REQUEST_BODY_SIZE ? parseInt(process.env.MAX_REQUEST_BODY_SIZE) : 1024 * 1024 * 50, // 50mb
-});
-
-console.log(`🌭 Listening on http://${webServer.hostname}:${webServer.port}`);
+  maxRequestBodySize: process.env.MAX_REQUEST_BODY_SIZE
+    ? parseInt(process.env.MAX_REQUEST_BODY_SIZE)
+    : 1024 * 1024 * 50, // 50mb
+} as Serve<ServerInfo>;

@@ -1,4 +1,4 @@
-import { AnyEvent, BaseView, MountEvent, ViewContext, renderFile } from "hotdogjs-core";
+import { AnyEvent, BaseView, MountEvent, ViewContext, renderFile } from "hotdogjs";
 
 export default class Html extends BaseView<AnyEvent> {
   name: string = "world";
@@ -7,5 +7,5 @@ export default class Html extends BaseView<AnyEvent> {
     this.name = e.query.name ?? "world";
   }
 
-  render = () => renderFile(import.meta);
+  render = () => renderFile(this, import.meta);
 }

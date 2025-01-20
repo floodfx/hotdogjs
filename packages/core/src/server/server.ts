@@ -1,4 +1,4 @@
-import { FileSystemRouter, MatchedRoute, type BunFile, type WebSocketHandler } from "bun";
+import { FileSystemRouter, type BuildOutput, type BunFile, type MatchedRoute, type WebSocketHandler } from "bun";
 import { randomUUID } from "crypto";
 import type { Component, ComponentContext } from "../component/component";
 import { html, safe, templateFromString, type Template } from "../template";
@@ -12,6 +12,8 @@ export type ServerInfo = {
   wsHandler: WsHandler<any, any>;
 };
 
+export type RequestDataExtractor<R extends object> = (r: Request) => Promise<R>;
+const emptyRequestDataExtractor: RequestDataExtractor<any> = async () => ({});
 
 export class Server {
   #conf: Conf;
@@ -25,7 +27,7 @@ export class Server {
     if (!this.#router) {
       this.#router = new FileSystemRouter({
         style: "nextjs",
-        dir: this.#conf.pagesDir,
+        dir: this.#conf.viewsDir,
       });
     }
     return this.#router;
@@ -33,19 +35,22 @@ export class Server {
 
   async viewRouter<R extends object>(
     req: Request,
-    requestDataExtractor: (r: Request) => Promise<R> = async () => ({} as R),
+    requestDataExtractor: RequestDataExtractor<R> = emptyRequestDataExtractor
   ): Promise<Response | null> {
     const matchedRoute = this.router.match(req);
     if (matchedRoute) {
       const resolver = this.#conf.viewTemplateResolver ?? this.loadPublicIndexTemplate;
       const url = new URL(req.url);
       const requestData = await requestDataExtractor(req);
-      return renderHttpView(url, matchedRoute, requestData, await resolver(matchedRoute, this.#conf), {});
+      return renderHttpView(url, matchedRoute, requestData, await resolver(matchedRoute, this.#conf), this.#conf);
     }
     return null;
   }
 
-  async wsRouter<R extends object>(req: Request, requestDataExtractor: (r: Request) => Promise<R> = async () => ({} as R),): Promise<[boolean, R & { csrfToken: string } | undefined]> {
+  async wsRouter<R extends object>(
+    req: Request,
+    requestDataExtractor: RequestDataExtractor<R> = emptyRequestDataExtractor
+  ): Promise<[boolean, (R & { csrfToken: string }) | undefined]> {
     const url = new URL(req.url);
     if (url.pathname === "/live/websocket") {
       // _csrf_token is required for websocket connections
@@ -53,7 +58,7 @@ export class Server {
       const csrfToken = url.searchParams.get("_csrf_token") ?? "";
       if (csrfToken) {
         const requestData = await requestDataExtractor(req);
-        return [true, { csrfToken, ...(requestData as R)}];
+        return [true, { csrfToken, ...(requestData as R) }];
       } else {
         console.warn(`No "_csrf_token" found in query params`);
       }
@@ -107,14 +112,17 @@ export class Server {
     return file;
   }
 
-  async buildClientJavascript() {
-    const file = Bun.file(this.#conf.clientFile);
+  async maybeBuildClientJavascript(): Promise<BuildOutput> {
+    if (this.#conf.skipBuildingClientJS) {
+      return { success: true, logs: [], outputs: [] };
+    }
+    const file = Bun.file(this.#conf.clientJSSourceFile);
     if (!file.exists()) {
-      throw new Error(`Cannot compile client file. "${this.#conf.clientFile}" does not exist`);
+      throw new Error(`Cannot compile client file. "${this.#conf.clientJSSourceFile}" does not exist`);
     }
     return await Bun.build({
-      entrypoints: [this.#conf.clientFile],
-      outdir: this.#conf.clientDir,
+      entrypoints: [this.#conf.clientJSSourceFile],
+      outdir: this.#conf.clientJSDestDir,
     });
   }
 
@@ -129,7 +137,8 @@ export class Server {
  * @param matchedRoute the MatchedRoute from the FileSystemRouter
  * @param requestData the request data to pass to the View
  * @param pageTemplate the html template for the page
- * @param templateData the data to pass to the page template including the csrf token
+ * @param config the server configuration
+ * @param templateData the data to pass to the page template (default is empty object)
  * @param htmlTag optional tag to wrap the View content in, defaults to "div"
  * @returns
  */
@@ -138,10 +147,12 @@ async function renderHttpView<R extends object, T extends object>(
   matchedRoute: MatchedRoute,
   requestData: R,
   pageTemplate: string,
-  templateData: T,
+  config: Conf,
+  templateData: T = {} as T,
   htmlTag: string = "div"
 ): Promise<Response> {
   const { default: View } = await import(matchedRoute.filePath);
+  const websocketBaseUrl = config.wsBaseUrl;
   const csrfToken = randomUUID();
   const viewId = randomUUID();
   const view = new View() as BaseView<AnyEvent>;
@@ -190,7 +201,7 @@ async function renderHttpView<R extends object, T extends object>(
   const content = html`<${htmlTag} data-phx-main="true" data-phx-session="" data-phx-static="" id="phx-${viewId}">
     ${safe(tmpl)}
   </${htmlTag}>`;
-  const template = templateFromString(pageTemplate, { content, ...templateData, csrfToken });
+  const template = templateFromString(pageTemplate, { content, ...templateData, csrfToken, websocketBaseUrl });
   return new Response(template.toString(), {
     headers: {
       "Content-Type": "text/html",

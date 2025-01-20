@@ -173,3 +173,8 @@ dist
 
 build/
 .rollup.cache/
+
+# ignore compiled public files
+public/
+
+.DS_Store

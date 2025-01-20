@@ -6,8 +6,8 @@ import { Template } from "../../template";
 import type { WsViewContext } from "../../view/context";
 import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
-import { UploadConfig } from "./uploadConfig";
-import type { DefaultUploadEntry } from "./uploadEntry";
+import { UploadConfig, type ExternalMetadata } from "./uploadConfig";
+import { DefaultUploadEntry } from "./uploadEntry";
 
 function tempPath(lastPathPart: string): string {
   // ensure the temp directory exists
@@ -103,7 +103,7 @@ export async function onProgressUpload(ctx: WsViewContext, payload: Phx.Progress
   });
 }
 
-export type AllowUploadEntries = { [key: string]: string };
+export type AllowUploadEntries = { [key: string]: string | ExternalMetadata };
 export type AllowUploadResult = {
   entries: AllowUploadEntries;
   config: UploadConfig;
@@ -119,18 +119,29 @@ export async function onAllowUpload(ctx: WsViewContext, payload: Phx.AllowUpload
     throw Error(`Could not find upload config for ref ${ref}`);
   }
 
-  const entriesReply: { [key: string]: string } = {
+  // update entriesReply with direct or external upload data
+  const entriesReply: { [key: string]: string | ExternalMetadata } = {
     ref,
   };
-  entries.forEach(async (entry) => {
+  // set new DefaultUploadEntry for each entry in the upload config
+  uc.entries = entries.map((entry) => new DefaultUploadEntry(entry, uc));
+  entries.forEach(async (entry, i) => {
+    const uuid = uc.entries[i].uuid;
     try {
       // this reply ends up been the "token" for the onPhxJoinUpload
-      entriesReply[entry.ref] = JSON.stringify(entry);
+      if (!uc.external) {
+        // send back JSON stringified entry
+        entriesReply[entry.ref] = JSON.stringify(entry);
+      } else {
+        // send back the external URL
+        entriesReply[entry.ref] = await uc.external({ uuid, ...entry });
+      }
     } catch (e) {
       // istanbul ignore next
       console.error("Error serializing entry", e);
     }
   });
+  console.log("onAllowUpload handle", ref, entriesReply);
 
   const view = await ctx.view.render({
     csrfToken: ctx.csrfToken,

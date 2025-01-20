@@ -1,10 +1,10 @@
-import { FileSystemRouter, ServerWebSocket } from "bun";
+import { FileSystemRouter, type ServerWebSocket } from "bun";
 import type { Component } from "../../component/component";
-import { Template, Tree, safe } from "../../template";
+import { Template, safe, type Tree } from "../../template";
 import { deepDiff } from "../../template/diff";
 import { WsViewContext, type Event } from "../../view/context";
 import type { AnyEvent, AnyPushEvent, BaseView, MountEvent, RenderMeta } from "../../view/view";
-import { PhxJoinPayload } from "../protocol/payloads";
+import { type PhxJoinPayload } from "../protocol/payloads";
 import { Phx } from "../protocol/phx";
 import { PhxReply } from "../protocol/reply";
 import { handleEvent } from "./event";
@@ -36,7 +36,13 @@ export class WsHandler<R extends object, T> {
   #hbInterval?: ReturnType<typeof setInterval>;
   #requestData?: R;
 
-  constructor(ws: ServerWebSocket<T>, router: FileSystemRouter, csrfToken: string, requestData?: R, options?: WsHandlerOptions) {
+  constructor(
+    ws: ServerWebSocket<T>,
+    router: FileSystemRouter,
+    csrfToken: string,
+    requestData?: R,
+    options?: WsHandlerOptions
+  ) {
     this.#ws = ws;
     this.#router = router;
     this.#csrfToken = csrfToken;

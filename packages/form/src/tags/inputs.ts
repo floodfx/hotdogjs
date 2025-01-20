@@ -12,7 +12,7 @@ interface InputOptions {
 export const text_input = <T>(form: Form<T>, key: keyof T, options?: InputOptions) => {
   const placeholder = options?.placeholder ? safe(` placeholder="${options.placeholder}"`) : "";
   const autocomplete = options?.autocomplete ? safe(` autocomplete="${options.autocomplete}"`) : "";
-  const phx_debounce = options?.phx_debounce ? safe(` phx-debounce="${options.phx_debounce}"`) : "";
+  const phx_debounce = options?.phx_debounce ? safe(` hd-debounce="${options.phx_debounce}"`) : "";
   const className = options?.className ? safe(` class="${options.className}"`) : "";
   const type = options?.type ?? "text";
   const id = `input_${String(key)}`;
@@ -53,7 +53,7 @@ export const error_tag = <T>(form: Form<T>, key: keyof T, options?: ErrorTagOpti
   const error = form.errors ? form.errors[key] : undefined;
   if (!form.valid && error) {
     const className = options?.className ?? "invalid-feedback";
-    return html`<span class="${className}" phx-feedback-for="${key}">${error}</span>`;
+    return html`<span class="${className}" hd-feedback-for="${key}">${error}</span>`;
   }
   return html``;
 };

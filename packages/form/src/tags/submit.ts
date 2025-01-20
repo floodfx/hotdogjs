@@ -11,7 +11,7 @@ export const submit = (label: string, options?: SubmitOptions) => {
     if (key === "disabled") {
       acc += value ? safe(` disabled`) : "";
     } else if (key === "phx_disable_with") {
-      acc += safe(` phx-disable-with="${escapehtml(value)}"`);
+      acc += safe(` hd-disable-with="${escapehtml(value)}"`);
     } else {
       acc += safe(` ${key}="${escapehtml(value)}"`);
     }

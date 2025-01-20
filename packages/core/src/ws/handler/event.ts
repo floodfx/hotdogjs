@@ -1,5 +1,5 @@
 import type { ComponentContext } from "../../component/component";
-import { Template, Tree } from "../../template";
+import { Template, type Tree } from "../../template";
 import type { WsViewContext } from "../../view/context";
 import { Phx } from "../protocol/phx";
 import { DefaultUploadEntry } from "./uploadEntry";

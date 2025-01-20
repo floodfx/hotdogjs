@@ -1,6 +1,6 @@
 import type { Tree } from "../../template";
 import type { AllowUploadEntries } from "../handler/upload";
-import type { UploadConfigOptions } from "../handler/uploadConfig";
+import type { UploadConfig } from "../handler/uploadConfig";
 import { Phx } from "./phx";
 
 /**
@@ -107,12 +107,7 @@ export namespace PhxReply {
    * @param entries the entries to be uploaded
    * @returns the reply message
    */
-  export function allowUploadReply(
-    msg: Phx.Msg,
-    diff: Tree,
-    config: UploadConfigOptions,
-    entries: AllowUploadEntries
-  ): Reply {
+  export function allowUploadReply(msg: Phx.Msg, diff: Tree, config: UploadConfig, entries: AllowUploadEntries): Reply {
     return [
       msg[Phx.MsgIdx.joinRef],
       msg[Phx.MsgIdx.msgRef],

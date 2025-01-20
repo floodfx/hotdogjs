@@ -3,7 +3,7 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts --watch",
+    "dev": "hotdogjs-watch",
     "start": "hotdogjs"
   },
   "devDependencies": {
@@ -21,8 +21,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "hotdogjs": "file:../core",
-    "@hotdogjs/form": "file:../form"
-
+    "hotdogjs": "workspace:*",
+    "@hotdogjs/form": "workspace:*"
   }
 }

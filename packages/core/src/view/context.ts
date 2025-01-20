@@ -1,12 +1,13 @@
-import { ServerWebSocket } from "bun";
+import { type ServerWebSocket } from "bun";
 // workaround for global.BroadcastChannel type error
-import { BroadcastChannel } from "node:worker_threads";
+// import { BroadcastChannel } from "node:worker_threads";
+import { URL } from "url";
 import type { Component, ComponentContext } from "../component/component";
-import { Template, Tree } from "../template";
+import { Template, type Tree } from "../template";
 import { WsHandler } from "../ws/handler";
-import { UploadConfig, UploadConfigOptions } from "../ws/handler/uploadConfig";
-import { DefaultUploadEntry, UploadEntry } from "../ws/handler/uploadEntry";
-import { AnyEvent, AnyPushEvent, ViewEvent, type BaseView } from "./view";
+import { UploadConfig, type UploadConfigOptions } from "../ws/handler/uploadConfig";
+import { DefaultUploadEntry, type UploadEntry } from "../ws/handler/uploadEntry";
+import type { AnyEvent, AnyPushEvent, BaseView, ViewEvent } from "./view";
 
 export type Event<E extends ViewEvent> = E["type"] | E;
 

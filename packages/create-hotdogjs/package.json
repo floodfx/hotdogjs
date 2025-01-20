@@ -6,12 +6,13 @@
   "scripts": {
     "preinstall": "echo 'Creating a new HotdogJS project...'",
     "postinstall": [
-      "echo 'HotdogJS project created!'",
+      "echo '🌭 HotdogJS project created!'",
       "echo 'opening browser...'",
       "open http://localhost:3000"
     ],
-    "start": "hotdogjs-watch",
-    "run": "hotdogjs"
+    "dev": "hotdogjs-watch",
+    "start": "hotdogjs",
+    "build": "hotdogjs-build"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -27,7 +28,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "hotdogjs": "latest",
-    "@hotdogjs/form": "latest"
+    "hotdogjs": "^0.2.0",
+    "@hotdogjs/form": "^0.0.3"
   }
 }
