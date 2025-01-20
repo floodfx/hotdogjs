@@ -6,8 +6,8 @@ import { Server, type ServerInfo } from "./server";
 const hdTomlUrl = process.cwd() + "/hotdogjs-conf.toml";
 const hdToml = Bun.file(hdTomlUrl);
 var confOpts: Partial<ConfOptions> = {};
-if(await hdToml.exists()) {
-  const toml = await import(hdTomlUrl)
+if (await hdToml.exists()) {
+  const toml = await import(hdTomlUrl);
   confOpts = toml;
 }
 
@@ -61,6 +61,7 @@ export const defaultServeConfig = {
   // web server options
   hostname: process.env.HOSTNAME || "localhost",
   port: process.env.PORT ? parseInt(process.env.PORT) : 3000,
-  maxRequestBodySize: process.env.MAX_REQUEST_BODY_SIZE ? parseInt(process.env.MAX_REQUEST_BODY_SIZE) : 1024 * 1024 * 50, // 50mb
+  maxRequestBodySize: process.env.MAX_REQUEST_BODY_SIZE
+    ? parseInt(process.env.MAX_REQUEST_BODY_SIZE)
+    : 1024 * 1024 * 50, // 50mb
 } as Serve<ServerInfo>;
-
