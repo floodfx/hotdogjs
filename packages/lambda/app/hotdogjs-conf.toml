@@ -1,0 +1,2 @@
+# don't build the client js in lambda
+skipBuildingClientJS = true
