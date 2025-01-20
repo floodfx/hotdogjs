@@ -1,6 +1,6 @@
 {
   "name": "@hotdogjs/form",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "src/index.ts",
   "description": "Super simple yet powerful HTML form validation and data mapping for HotdogJS",
   "devDependencies": {
