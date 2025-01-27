@@ -24,6 +24,8 @@ if (!build.success) {
 
 // default configuration for the server
 export const defaultServeConfig = {
+  // TODO use https://bun.sh/docs/api/http#static-routes
+  // static: {...}
   async fetch(req, webServer) {
     // view routes
     const v = await server.viewRouter(req);
