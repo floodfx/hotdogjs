@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "hotdogjs": "workspace:*",
-    "@hotdogjs/form": "workspace:*"
+    "@hotdogjs/form": "workspace:*",
+    "zod": "latest"
   }
 }

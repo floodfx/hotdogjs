@@ -2,11 +2,68 @@
 
 What goes well with [Bun](https://bun.sh)? Hotdogs! 🌭🌭🌭
 
-Hotdogjs is an event-based web framework built specifically for [Bun](https://bun.sh) based on the LiveView paradigm popularized by [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html).  In short, when a user interacts with a page (e.g. clicks a button, fills out a form, etc.), the client sends events to the server which can update the server state and then sends a diff back to the client that is automatically applied to the DOM.  This results in a very fast user experience with very small payloads in both directions and a very simple yet powerful programming model for developers.  Server events can also trigger server-side state and, relatedly, client-side page updates.
+Hotdogjs is a LiveView web framework built specifically for [Bun](https://bun.sh).
 
-Hotdogjs supports both server rendering and client interactivity in a single programming model that is a departure from the decade old Single Page Application (SPA) model popularized by React.  Hotdogjs is built on the following principles:
+Hotdogjs's key features are:
+ * Super-fast http and websocket communication (thanks to Bun)
+ * Real-time, multi-player out of the box
+ * Built-in ergonomics for form validation, file uploads with progress
+ * Server-side state management with automatic client-side updates
+ * Automatic, performant, diff-based communication protocol
+ * LiveView per file with file-based routing
+ * Hot reloading based development
+
+## How does Hotdogjs work?
+At a high level, LiveViews automatically detect registered events (clicks, form updates, etc.) and routes these events (and metadata) from client to server over a websocket.  When the server receives an event, it routes it to a developer defined handler which can update the server state and kicks off a re-render.  The server then calculates a view diff and sends this diff back to the client which is automatically applied to the DOM.
+
+All of the complicated stuff (communication protocol, websocket lifecycle, state management, diff calculation and application, etc.) is handled automatically by Hotdogjs.  The developer only needs to focus on the business logic of their application using the simple, yet powerful programming paradigm of LiveViews.
+
+## What type of projects is Hotdogjs best for?
+ * Applications with user input like forms, AI-chat, etc
+ * Applications that benefit from real-time updates
+ * Applications where multiple users collaborate on the same data
+ * Applications with file uploads
+
+## What type of projects is Hotdogjs NOT best for?
+ * Static sites
+
+## Quick Start
+```bash
+bun create hotdogjs my-app
+cd my-app
+bun dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Anatomy of a Hotdogjs project
+ * `public/` - Static assets including html templates and client-side javascript
+ * `views/` - Hotdogjs LiveViews routed based on [File System Router](https://bun.sh/docs/api/file-system-router)
+ * `src/` - Hotdogjs server-side code
+ * `package.json` - Node.js compatible package.json with required dependencies and default scripts
+ * `hotdogjs-conf.toml` - (optional) hotdogjs configuration file for overriding default configuration
+
+### Basics of a (Live) View
+A `View` is a web page that responds to events and updates based on server state changes. `View`s are initially rendered as HTML over HTTP. Once rendered, the `View` automatically connects to the server via a websocket. When connected, the `View` automatically sends events from the client and receives then automatically applies diffs to the DOM. You should extend `BaseView` to create your own `View`.
+
+### View API
+`View` have the following API:
+ * `mount` is called once before the `View` is rendered. It is useful for setting up initial state based on request parameters and/or loading data from the server.
+ * `handleParams` is called when the URL changes and the `View` is already mounted. This method is useful for updating the state of the `View` based on the new URL including the query parameters and/or route parameters.
+ * `handleEvent` is called when an event is received from the client or server. This method is useful for updating the state of the `View` based on the event and is the main way to handle user interactions or server-based events with the `View`.
+ * `render` defines the HTML to render for the `View` based on the current state.  This method is called once when the `View` is mounted and again whenever the `View` state changes.
+ * `shutdown` is called when the `View` is being shutdown / unmounted.  This method is useful for cleaning up any resources that the `View` may have allocated.
+
+### View Routing
+A `View` is defined by creating a file in the `views/` directory.  We use Bun's [File System Router](https://bun.sh/docs/api/file-system-router) to route requests to the appropriate `View` and extract path and query parameters that are passed to the `View` as `params` in the `mount` method.
+
+The `View` is defined by creating a class that extends `BaseView`.  The `View` class should have a `render` method that returns a `Template` which is a tagged template literal that describes the HTML to render.  The `Template` can also include `component` methods which are used to render `Component`s.
+
+The `View` class can also have event handlers which are methods that are called when events are received from the client or server.  The event handlers are defined using the `on` method.  For example, `on("click", () => { ... })` will handle click events.
+
+## How is Hotdogjs different from other frameworks?
+Hotdogjs supports both server rendering and client interactivity in a single programming model called [LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html).  Hotdogjs is built on the following principles:
  * **Server-side rendering** - HTML is rendered on the server and sent to the client
- * **Client-side interactivity** - client-side interactivity is achieved by sending client-events to the server, updating the server state, and repling with diffs to the client which updates the DOM which results in very small payloads in both directions, resulting in a much faster user experience
+ * **Client-side interactivity** - client-side interactivity is achieved by sending client-events to the server, updating the server state, and replying with diffs to the client which updates the DOM which results in very small payloads in both directions, resulting in a much faster user experience
  * **No client-side routing** - we use the browser's native routing along server-side routing to determine the page to render
  * **No client-side state management** - state is managed on the server so there is no need for a client-side state management library or synchronization which is a common source of complexity, slowness, and bugs
  * **No client-side data fetching** - data is always fetched on the server and applied to the state there which is faster and more secure (no need to expose APIs to the client or worry about CORS)
@@ -14,49 +71,57 @@ Hotdogjs supports both server rendering and client interactivity in a single pro
  * **No JSX** - no JSX transpiling, JSX runtime, or additional javascript to download.  The client-side code is always the same, small size.
  * **No Typescript compilation** - TypeScript is executed directly by Bun
 
-## How is Hotdogjs different from other frameworks?
- * Built specifically to take advantage of [Bun](https://bun.sh)
-   * Bun is a server runtime (i.e. not a browser runtime) which means if you want to take advantage of its speed you need a framework that is built specifically for the server not for browsers.  Hotdogjs is that framework.
- * Not an Single Page Application (SPA) framework which means:
-    * No client side routing - we use the browser's native routing
-    * No client side state management - state is managed on the server
-    * No client side data fetching - data is always fetched on the server and either rendered in the HTML or passed via diffs to the client
-    * No virtual DOM - we use the native DOM and only morph the elements that have changed since last state change
-    * Page loads are extremely fast - no need to download a large JavaScript bundle
-    * No JSX - only HTML and TypeScript, no JSX transpiling
-    * No Typescript compilation - TypeScript is executed directly by Bun
+## Configuration / hotdogjs-conf.toml
+If you want/need to override the default configuration of a Hotdogjs project, you can do so by creating a `hotdogjs-conf.toml` file in the root of your project.
 
-## Why Bun?
-Bun is fast as heck and, while is compatable with nodejs APIs, it offers Bun specific APIs that are orders of magnitude faster than other runtimes. This project seeks to take advantage of Bun in its entirety. Bun builds, bundles, transpiles, etc without dependencies on any other tools which is extremely attractive. Specific list of great things about Bun for Hotdogjs:
+The following configuration options are supported:
+ * `publicDir` - location of the public directory defaults to `public/`
+ * `clientFile` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
+ * `clientDir` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
+ * `skipBuildingClientJS` - whether the server should NOT build the client-side javascript file on startup (defaults to false)
+ * `viewsDir` - where to find the views (defaults to `views/`)
+ * `staticPrefix` - the prefix for static assets (defaults to `/static`)
+ * `staticExcludes` - a comma separated list of static assets to exclude from the build (defaults to empty)
+ * `wsBaseUrl` - the base url for the websocket connection (defaults to empty which uses the default websocket url)
+
+Alternatively, you can override the default configuration by setting the following environment variables:
+ * `HD_PUBLIC_DIR` - location of the public directory defaults to `public/`
+ * `HD_CLIENT_JS_FILE` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
+ * `HD_CLIENT_JS_DEST_DIR` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
+ * `HD_SKIP_BUILD_CLIENT_JS` - whether the server should NOT build the client-side javascript file on startup (defaults to false)
+ * `HD_VIEWS_DIR` - where to find the views (defaults to `views/`)
+ * `HD_STATIC_PREFIX` - the prefix for static assets (defaults to `/static`)
+ * `HD_STATIC_EXCLUDES` - a comma separated list of static assets to exclude from the build (defaults to empty)
+ * `HD_WS_BASE_URL` - the base url for the websocket connection (defaults to empty which uses the default websocket url)
+
+## Roadmap / Known Issues
+ * [ ] More documentation 😀
+ * [ ] Update to server to use HTTP static routes
+ * [ ] `eject` command to generate basic server and client-side javascript files so easier to customize
+ * [ ] Better api for `hd-click`, `hd-change`, etc to bind to events in a type-safe way
+ * [ ] Better location for layout templates
+ * [ ] Better Form API with support for html
+ * [ ] Use Bun's html escape
+ * [ ] Support Components in template directly rather than `component` method
+
+
+## Bun features we use
+Bun is fast as heck and provides some powerful features out-of-the-box that Hotdogjs takes advantage of.  We specifically lean into Bun features on purpose since this project seeks to take advantage of Bun in its entirety. Below is a list of Bun features that are used in Hotdogjs:
  * Bun [directly executes TypeScript](https://bun.sh/docs/runtime/typescript#running-ts-files) without transpiling
- * Native HTTP Server
-   * pub to all ws
- * Native Websockets
-   * pub/sub?
- * Native Pub/Sub
- * Native FileSystemRouter
- * Bun.build for compiling and bundling client-side code
- * and other things that might be interesting to Hotdogjs including:
-   * HTMLRewriter
-   * Web Workers
-
-## Why should you use Hotdogjs?
- * You get the power of server-side routing, templating, state management, and security and want a framework that isn't shoehorned into a server-first approach
- * You have heard about the power of Phoenix LiveViews and wished there was a javascript implementation
-
-## Why should you NOT use Hotdogjs?
- * Hotdogjs is not ideal for static sites. It requires a server to run
+ * Bun [build, bundles, and transpiles](https://bun.sh/docs/bundler) client-side code without dependencies on any other tools
+ * Bun [has a native HTTP server](https://bun.sh/docs/api/http)
+ * Bun [also supports native websockets](https://bun.sh/docs/api/websockets)
+ * Bun [has a native FileSystemRouter](https://bun.sh/docs/api/file-system-router)
+ * Bun [makes it easy to scaffold projects](https://bun.sh/docs/cli/bun-create)
+ * Bun [supports workspaces](https://bun.sh/docs/install/workspaces) which we use for organizing the project
+ * Bun [has a high-performance SQLite driver](https://bun.sh/docs/api/sqlite)
+ * Bun [apis for binary data](https://bun.sh/docs/api/binary-data) and [file I/O](https://bun.sh/docs/api/file-io)
 
 
+## Bun features we don't use yet
+ * [Built-in S3 API](https://bun.sh/docs/api/s3)
+ * [Built-in PostgreSQL bindings](https://bun.sh/docs/api/sql)
 
-To install dependencies:
 
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run src/index.ts
-```
+## How is this different from LiveViewJS?
+I wrote LiveViewJS too.  Hotdogjs started as a way to learn more about Bun and re-implement LiveViews for the Bun runtime.  The implementation and APIs are similar with some simplifications in Hotdogjs to make it more ergonomic for developers.

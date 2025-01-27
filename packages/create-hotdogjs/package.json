@@ -3,13 +3,16 @@
   "description": "Create a new HotdogJS project",
   "version": "0.0.1",
   "type": "module",
-  "scripts": {
-    "preinstall": "echo 'Creating a new HotdogJS project...'",
+  "bun-create": {
+    "preinstall": "echo 'Creating a new 🌭 HotdogJS project...'",
     "postinstall": [
       "echo '🌭 HotdogJS project created!'",
       "echo 'opening browser...'",
       "open http://localhost:3000"
     ],
+    "start": "bun dev"
+  },
+  "scripts": {
     "dev": "hotdogjs-watch",
     "start": "hotdogjs",
     "build": "hotdogjs-build"
@@ -29,6 +32,6 @@
   },
   "dependencies": {
     "hotdogjs": "^0.2.0",
-    "@hotdogjs/form": "^0.0.3"
+    "@hotdogjs/form": "^0.0.5"
   }
 }
