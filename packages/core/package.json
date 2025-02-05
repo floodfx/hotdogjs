@@ -3,25 +3,17 @@
   "version": "0.2.1",
   "main": "src/index.ts",
   "description": "Hot-reloading, multi-player, single-file LiveViews at the speed of Bun",
-  "dependencies": {
-    "topbar": "^2.0.1",
-    "phoenix": "^1.7.10",
-    "phoenix_html": "^3.3.3",
-    "phoenix_live_view": "0.20.1"
-  },
   "devDependencies": {
-    "@types/bun": "1.0.7",
-    "@types/cookie": "^0.6.0",
-    "@types/phoenix": "^1.6.4",
-    "@types/phoenix_live_view": "^0.18.4",
     "typescript": "^5.4.2"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@hotdogjs/client": "*"
   },
   "bin": {
     "hotdogjs": "./src/server/start.ts",
     "hotdogjs-watch": "./src/server/watch.ts",
-    "hotdogjs-build": "./src/server/build.ts"
+    "hotdogjs-build": "./src/server/build.ts",
+    "hotdogjs-eject": "./src/server/eject.ts"
   }
 }
