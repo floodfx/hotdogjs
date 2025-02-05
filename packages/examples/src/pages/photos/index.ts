@@ -100,46 +100,48 @@ export default class Photos extends BaseView<PhotosEvents> {
   render(meta: RenderMeta<PhotosEvents>) {
     const { uploads } = meta;
     return html`
-      <h2>My Photo Groups</h2>
+      <div class="flex flex-col items-center">
+        <h2 class="text-2xl font-bold">My Photo Groups</h2>
 
-      <!-- Render the form -->
-      ${form_for("#", this._csrfToken, {
-        id: "photo-form",
-        onChange: "validate",
-        onSubmit: "save",
-      })}
-
-        <div>
-          <!-- file input / drag and drop -->
-          <div hd-drop-target="${uploads.photos.ref}" style="border: 2px dashed #ccc; padding: 10px; margin: 10px 0;">
-            ${live_file_input(uploads.photos, "file-input file-input-bordered w-full max-w-xs")}
-            or drag and drop files here
-          </div>
-          <!-- help text -->
-          <div style="font-size: 10px; padding-bottom: 3rem">
-            Add up to ${uploads.photos.max_entries} photos
-            (max ${uploads.photos.max_file_size / (1024 * 1024)} MB each)
-          </div>
-        </div>
-
-        <!-- any errors from the upload -->
-        ${uploads.photos.errors.map((error: string) => html`<p class="invalid-feedback">${error}</p>`)}
-
-        <!-- render the preview, progress, and cancel button of the selected files -->
-        ${uploads.photos.entries.map(renderEntry)}
-
-        <!-- submit button -->
-        ${submit("Upload", {
-          classes: "btn btn-primary",
-          phx_disable_with: "Saving...",
-          disabled: uploads.photos.errors.length > 0,
+        <!-- Render the form -->
+        ${form_for("#", this._csrfToken, {
+          id: "photo-form",
+          onChange: "validate",
+          onSubmit: "save",
         })}
-      </form>
 
-      <!-- render the photos  -->
-      <ul id="photo_groups_list" hd-update="prepend">
-        ${this.photos.map(renderPhoto)}
-      </ul>
+          <div class="flex flex-col items-center">
+            <!-- file input / drag and drop -->
+            <div hd-drop-target="${uploads.photos.ref}" style="border: 2px dashed #ccc; padding: 10px; margin: 10px 0;">
+              ${live_file_input(uploads.photos, "file-input file-input-bordered w-full max-w-xs")}
+              or drag and drop files here
+            </div>
+            <!-- help text -->
+            <div class="text-sm text-gray-500" style="font-size: 10px; padding-bottom: 3rem">
+              Add up to ${uploads.photos.max_entries} photos
+              (max ${uploads.photos.max_file_size / (1024 * 1024)} MB each)
+            </div>
+          </div>
+
+          <!-- any errors from the upload -->
+          ${uploads.photos.errors.map((error: string) => html`<p class="invalid-feedback">${error}</p>`)}
+
+          <!-- render the preview, progress, and cancel button of the selected files -->
+          ${uploads.photos.entries.map(renderEntry)}
+
+          <!-- submit button -->
+          ${submit("Upload", {
+            classes: "btn btn-primary",
+            phx_disable_with: "Saving...",
+            disabled: uploads.photos.errors.length > 0,
+          })}
+        </form>
+
+        <!-- render the photos  -->
+        <ul id="photo_groups_list" hd-update="prepend">
+          ${this.photos.map(renderPhoto)}
+        </ul>
+      </div>
     `;
   }
 }
@@ -147,7 +149,7 @@ export default class Photos extends BaseView<PhotosEvents> {
 // Render a preview of the uploaded file with progress bar and cancel button
 function renderEntry(entry: UploadEntry) {
   return html`
-    <div style="display: flex; align-items: center;">
+    <div class="flex items-center" style="display: flex; align-items: center;">
       <div style="width: 250px; margin: 2rem 0;">${live_img_preview(entry)}</div>
       <div style="display: flex; align-items: center; margin-left: 2rem;">
         <progress
