@@ -1,5 +1,5 @@
-import { Form, ZodForm, error_tag, form_for, submit, text_input } from "@hotdogjs/form";
-import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
+import { Form, ZodForm, error_tag, form, submit, text_input } from "@hotdogjs/form";
+import { BaseView, MountEvent, ViewContext, html, type RenderMeta } from "hotdogjs";
 import BookDB, { Book, BookSchema } from "../../db/book_db";
 
 type Events =
@@ -55,33 +55,34 @@ export default class Books extends BaseView<Events> {
     }
   }
 
-  render() {
+  render(meta: RenderMeta<Events>) {
     return html`
       <h1>My Library</h1>
 
       <div id="bookForm">
-        ${form_for("#", this._csrfToken, {
-          onSubmit: "save",
-          onChange: "validate",
-        })}
+        ${form(
+          {
+            submit: "save",
+            change: "validate",
+            csrfToken: meta.csrfToken,
+          },
+          html`
+            <div class="field">
+              ${text_input(this.form, "name", { placeholder: "Name", autocomplete: "off", debounce: 1000 })}
+              ${error_tag(this.form, "name")}
+            </div>
 
-          <div class="field">
-            ${text_input(this.form, "name", { placeholder: "Name", autocomplete: "off", phx_debounce: 1000 })}
-            ${error_tag(this.form, "name")}
-          </div>
+            <div class="field">
+              ${text_input(this.form, "author", { placeholder: "Author", autocomplete: "off", debounce: 1000 })}
+              ${error_tag(this.form, "author")}
+            </div>
 
-          <div class="field">
-            ${text_input(this.form, "author", { placeholder: "Author", autocomplete: "off", phx_debounce: 1000 })}
-            ${error_tag(this.form, "author")}
-          </div>
-
-          ${submit("Add Book", { phx_disable_with: "Saving..." })}
-        </form>
+            ${submit("Add Book", { disable_with: "Saving..." })}
+          `
+        )}
       </div>
 
-      <div id="books">
-        ${this.books.map(renderBook)}
-      </div>
+      <div id="books">${this.books.map(renderBook)}</div>
     `;
   }
 }

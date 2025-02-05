@@ -178,3 +178,6 @@ build/
 public/
 
 .DS_Store
+
+# todo
+todo.md
