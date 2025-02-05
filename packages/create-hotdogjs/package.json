@@ -17,21 +17,12 @@
     "start": "hotdogjs",
     "build": "hotdogjs-build"
   },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/cookie": "^0.6.0",
-    "@types/phoenix": "^1.6.4",
-    "@types/phoenix_live_view": "^0.18.4",
-    "topbar": "^2.0.1",
-    "phoenix": "^1.7.10",
-    "phoenix_html": "^3.3.3",
-    "phoenix_live_view": "0.20.1"
-  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "hotdogjs": "^0.2.0",
+    "@hotdogjs/client": "^0.0.1",
     "@hotdogjs/form": "^0.0.5"
   }
 }
