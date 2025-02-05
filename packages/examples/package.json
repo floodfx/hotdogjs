@@ -4,18 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "hotdogjs-watch",
-    "start": "hotdogjs"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/cookie": "^0.6.0",
-    "@types/phoenix": "^1.6.4",
-    "@types/phoenix_live_view": "^0.18.4",
-    "@types/react": "^18.2.61",
-    "topbar": "^2.0.1",
-    "phoenix": "^1.7.10",
-    "phoenix_html": "^3.3.3",
-    "phoenix_live_view": "0.20.1"
+    "start": "hotdogjs",
+    "eject": "hotdogjs-eject"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -23,6 +13,7 @@
   "dependencies": {
     "hotdogjs": "workspace:*",
     "@hotdogjs/form": "workspace:*",
+    "@hotdogjs/client": "workspace:*",
     "zod": "latest"
   }
 }
