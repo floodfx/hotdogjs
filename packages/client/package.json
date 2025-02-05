@@ -1,0 +1,25 @@
+{
+  "name": "@hotdogjs/client",
+  "version": "0.0.1",
+  "main": "src/client/hotdogjs-client.ts",
+  "description": "Hot-reloading, multi-player, single-file LiveViews at the speed of Bun",
+  "exports": {
+    ".": "./src/client/hotdogjs-client.ts",
+    "./s3uploader": "./src/client/s3uploader.ts"
+  },
+  "dependencies": {
+    "topbar": "^2.0.1",
+    "phoenix": "^1.7.10",
+    "phoenix_html": "^3.3.3",
+    "phoenix_live_view": "0.20.1"
+  },
+  "devDependencies": {
+    "@types/bun": "1.0.7",
+    "@types/phoenix": "^1.6.4",
+    "@types/phoenix_live_view": "^0.18.4",
+    "typescript": "^5.4.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

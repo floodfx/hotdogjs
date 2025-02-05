@@ -1,10 +1,20 @@
+interface S3UploadEntry {
+  meta: {
+    url: string;
+    fields: Record<string, string>;
+  };
+  file: File;
+  progress: (percent: number) => void;
+  error: () => void;
+}
+
 /**
+ * S3Uploader for Client Uploads (i.e. used in client javascript not server).
  * Takes a list of file entries and uploads them to S3, tracking progress, as we go.
  *
- * TODO use types for entries
  */
-export function S3(entries: any, onViewError: Function) {
-  entries.forEach((entry: any) => {
+export function S3(entries: S3UploadEntry[], onViewError: Function) {
+  entries.forEach((entry: S3UploadEntry) => {
     let formData = new FormData();
     // get s3 URL and fields from the entry metadata
     let { url, fields } = entry.meta;
