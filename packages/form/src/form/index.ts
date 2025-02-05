@@ -7,6 +7,9 @@ export type FormErrors<T> = {
   [Property in keyof T]?: string;
 };
 
+/**
+ * Form makes it easy to have a html form that automatically validates and creates an object of type T.
+ */
 export interface Form<T> {
   /**
    * Optional string representing the action occuring on the changeset. If the action is not
@@ -34,7 +37,14 @@ export interface Form<T> {
    */
   customMessage?: string;
 
+  /**
+   * Update the form with new attributes and an optional action.
+   */
   update(newAttrs: Partial<T>, action?: string): void;
+
+  /**
+   * Reset the form to its initial state.
+   */
   reset(): void;
 }
 

@@ -4,7 +4,7 @@ import type { Form } from "../form";
 interface InputOptions {
   placeholder?: string;
   autocomplete?: "off" | "on";
-  phx_debounce?: number | "blur" | "focus";
+  debounce?: number | "blur" | "focus";
   type?: "text" | "tel";
   className?: string;
 }
@@ -12,13 +12,13 @@ interface InputOptions {
 export const text_input = <T>(form: Form<T>, key: keyof T, options?: InputOptions) => {
   const placeholder = options?.placeholder ? safe(` placeholder="${options.placeholder}"`) : "";
   const autocomplete = options?.autocomplete ? safe(` autocomplete="${options.autocomplete}"`) : "";
-  const phx_debounce = options?.phx_debounce ? safe(` hd-debounce="${options.phx_debounce}"`) : "";
+  const debounce = options?.debounce ? safe(` hd-debounce="${options.debounce}"`) : "";
   const className = options?.className ? safe(` class="${options.className}"`) : "";
   const type = options?.type ?? "text";
   const id = `input_${String(key)}`;
   const value = form.data[key] ?? "";
   // prettier-ignore
-  return html`<input type="${type}" id="${id}" name="${String(key)}" value="${value}"${className}${autocomplete}${placeholder}${phx_debounce}/>`;
+  return html`<input type="${type}" id="${id}" name="${String(key)}" value="${value}"${className}${autocomplete}${placeholder}${debounce}/>`;
 };
 
 export class TextInput<T> extends BaseComponent {
