@@ -87,14 +87,10 @@ export class Conf {
   wsBaseUrl: string;
   viewTemplateResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
 
-  constructor(serverImportMeta: ImportMeta, options: Partial<ConfOptions> = {}) {
-    const relativeDir = serverImportMeta.dir;
+  constructor(options: Partial<ConfOptions> = {}) {
     this.publicDir = getOrElse("HD_PUBLIC_DIR", options.publicDir ?? process.cwd() + "/public");
     this.viewsDir = getOrElse("HD_VIEWS_DIR", options.viewsDir ?? process.cwd() + "/views");
-    this.clientJSSourceFile = getOrElse(
-      "HD_CLIENT_JS_FILE",
-      options.clientJSSourceFile ?? relativeDir + "/../client/app.ts"
-    );
+    this.clientJSSourceFile = getOrElse("HD_CLIENT_JS_FILE", options.clientJSSourceFile ?? "");
     this.clientJSDestDir = getOrElse("HD_CLIENT_JS_DEST_DIR", options.clientDestDir ?? this.publicDir + "/js");
     this.skipBuildingClientJS = getOrElse("HD_SKIP_BUILDING_CLIENT_JS", options.skipBuildingClientJS ?? false);
     this.staticPrefix = getOrElse("HD_STATIC_PREFIX", options.staticPrefix ?? "/static");

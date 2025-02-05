@@ -1,5 +1,6 @@
-import { FileSystemRouter, type BuildOutput, type BunFile, type MatchedRoute, type WebSocketHandler } from "bun";
+import { BunFile, FileSystemRouter, type BuildOutput, type MatchedRoute, type WebSocketHandler } from "bun";
 import { randomUUID } from "crypto";
+import { URL } from "url";
 import type { Component, ComponentContext } from "../component/component";
 import { html, safe, templateFromString, type Template } from "../template";
 import { HttpViewContext } from "../view/context";
@@ -114,8 +115,15 @@ export class Server {
 
   async maybeBuildClientJavascript(): Promise<BuildOutput> {
     if (this.#conf.skipBuildingClientJS) {
+      console.log("Skipping client javascript build");
       return { success: true, logs: [], outputs: [] };
     }
+    if (!this.#conf.clientJSSourceFile || this.#conf.clientJSSourceFile === "") {
+      // resolve client ts file and drop file:// part of the path
+      const clientJsPath = (await import.meta.resolve("@hotdogjs/client")).replace("file://", "");
+      this.#conf.clientJSSourceFile = clientJsPath;
+    }
+    console.log("Building client javascript from", this.#conf.clientJSSourceFile);
     const file = Bun.file(this.#conf.clientJSSourceFile);
     if (!file.exists()) {
       throw new Error(`Cannot compile client file. "${this.#conf.clientJSSourceFile}" does not exist`);
