@@ -37,13 +37,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Anatomy of a Hotdogjs project
  * `public/` - Static assets including html templates and client-side javascript
- * `views/` - Hotdogjs LiveViews routed based on [File System Router](https://bun.sh/docs/api/file-system-router)
+ * `views/` - Hotdogjs LiveViews routed based on [File System Router](https://bun.sh/docs/api/file-system-router); all `.ts` files in this directory are expected to be LiveViews
  * `src/` - Hotdogjs server-side code
  * `package.json` - Node.js compatible package.json with required dependencies and default scripts
  * `hotdogjs-conf.toml` - (optional) hotdogjs configuration file for overriding default configuration
 
+### View Routing
+A `View` is defined by creating a file in the `views/` directory.  We use Bun's [File System Router](https://bun.sh/docs/api/file-system-router) to route requests to the appropriate `View` and extract path and query parameters that are passed to the `View` as `params` in the `mount` method.  You can override the directory that the `View`s are located in by setting the `viewsDir` option in the `hotdogjs-conf.toml` file.
+
 ### Basics of a (Live) View
-A `View` is a web page that responds to events and updates based on server state changes. `View`s are initially rendered as HTML over HTTP. Once rendered, the `View` automatically connects to the server via a websocket. When connected, the `View` automatically sends events from the client and receives then automatically applies diffs to the DOM. You should extend `BaseView` to create your own `View`.
+A `View` is a web page that responds to events, updates its state, and generates HTML diffs. `View`s are initially rendered as HTML over HTTP. Once rendered, the `View` automatically connects to the server via a websocket. When connected, the `View` automatically sends events from the client and receives then automatically applies diffs to the DOM. You should extend `BaseView` to create your own `View`.
 
 ### View API
 `View` have the following API:
@@ -53,12 +56,9 @@ A `View` is a web page that responds to events and updates based on server state
  * `render` defines the HTML to render for the `View` based on the current state.  This method is called once when the `View` is mounted and again whenever the `View` state changes.
  * `shutdown` is called when the `View` is being shutdown / unmounted.  This method is useful for cleaning up any resources that the `View` may have allocated.
 
-### View Routing
-A `View` is defined by creating a file in the `views/` directory.  We use Bun's [File System Router](https://bun.sh/docs/api/file-system-router) to route requests to the appropriate `View` and extract path and query parameters that are passed to the `View` as `params` in the `mount` method.
 
-The `View` is defined by creating a class that extends `BaseView`.  The `View` class should have a `render` method that returns a `Template` which is a tagged template literal that describes the HTML to render.  The `Template` can also include `component` methods which are used to render `Component`s.
-
-The `View` class can also have event handlers which are methods that are called when events are received from the client or server.  The event handlers are defined using the `on` method.  For example, `on("click", () => { ... })` will handle click events.
+## Ejecting a Hotdogjs project
+When using the `bun create hotdogjs` command, the generated project comes with a `eject` script that, when run, will generate the basic server configuration, client-side javascript file, `hotdogjs-conf.toml`, and update the `package.json`.  This gives you the ability to customize the project to your liking including full control over the http server and client-side javascript file.
 
 ## How is Hotdogjs different from other frameworks?
 Hotdogjs supports both server rendering and client interactivity in a single programming model called [LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html).  Hotdogjs is built on the following principles:
