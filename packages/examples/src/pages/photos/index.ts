@@ -1,4 +1,4 @@
-import { Form, ZodForm, form_for, submit } from "@hotdogjs/form";
+import { Form, ZodForm, form, submit } from "@hotdogjs/form";
 import {
   BaseView,
   MountEvent,
@@ -104,38 +104,43 @@ export default class Photos extends BaseView<PhotosEvents> {
         <h2 class="text-2xl font-bold">My Photo Groups</h2>
 
         <!-- Render the form -->
-        ${form_for("#", this._csrfToken, {
-          id: "photo-form",
-          onChange: "validate",
-          onSubmit: "save",
-        })}
-
-          <div class="flex flex-col items-center">
-            <!-- file input / drag and drop -->
-            <div hd-drop-target="${uploads.photos.ref}" style="border: 2px dashed #ccc; padding: 10px; margin: 10px 0;">
-              ${live_file_input(uploads.photos, "file-input file-input-bordered w-full max-w-xs")}
-              or drag and drop files here
+        ${form(
+          {
+            id: "photo-form",
+            change: "validate",
+            submit: "save",
+            csrfToken: meta.csrfToken,
+          },
+          html`
+            <div class="flex flex-col items-center">
+              <!-- file input / drag and drop -->
+              <div
+                hd-drop-target="${uploads.photos.ref}"
+                style="border: 2px dashed #ccc; padding: 10px; margin: 10px 0;">
+                ${live_file_input(uploads.photos, "file-input file-input-bordered w-full max-w-xs")} or drag and drop
+                files here
+              </div>
+              <!-- help text -->
+              <div class="text-sm text-gray-500" style="font-size: 10px; padding-bottom: 3rem">
+                Add up to ${uploads.photos.max_entries} photos (max ${uploads.photos.max_file_size / (1024 * 1024)} MB
+                each)
+              </div>
             </div>
-            <!-- help text -->
-            <div class="text-sm text-gray-500" style="font-size: 10px; padding-bottom: 3rem">
-              Add up to ${uploads.photos.max_entries} photos
-              (max ${uploads.photos.max_file_size / (1024 * 1024)} MB each)
-            </div>
-          </div>
 
-          <!-- any errors from the upload -->
-          ${uploads.photos.errors.map((error: string) => html`<p class="invalid-feedback">${error}</p>`)}
+            <!-- any errors from the upload -->
+            ${uploads.photos.errors.map((error: string) => html`<p class="invalid-feedback">${error}</p>`)}
 
-          <!-- render the preview, progress, and cancel button of the selected files -->
-          ${uploads.photos.entries.map(renderEntry)}
+            <!-- render the preview, progress, and cancel button of the selected files -->
+            ${uploads.photos.entries.map(renderEntry)}
 
-          <!-- submit button -->
-          ${submit("Upload", {
-            classes: "btn btn-primary",
-            phx_disable_with: "Saving...",
-            disabled: uploads.photos.errors.length > 0,
-          })}
-        </form>
+            <!-- submit button -->
+            ${submit("Upload", {
+              classes: "btn btn-primary",
+              phx_disable_with: "Saving...",
+              disabled: uploads.photos.errors.length > 0,
+            })}
+          `
+        )}
 
         <!-- render the photos  -->
         <ul id="photo_groups_list" hd-update="prepend">

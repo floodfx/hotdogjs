@@ -1,4 +1,4 @@
-import { Form, ZodForm, form_for, submit } from "@hotdogjs/form";
+import { Form, ZodForm, form, submit } from "@hotdogjs/form";
 import {
   BaseView,
   MountEvent,
@@ -132,7 +132,7 @@ export default class Photos extends BaseView<PhotosEvents> {
       <h2>My Photo Groups</h2>
 
       <!-- Render the form -->
-      ${form_for("#", this._csrfToken, {
+      ${form("#", this._csrfToken, {
         id: "photo-form",
         onChange: "validate",
         onSubmit: "save",
