@@ -1,0 +1,147 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "hotdogjs",
+    },
+    "packages/client": {
+      "name": "@hotdogjs/client",
+      "version": "0.0.1",
+      "dependencies": {
+        "phoenix": "^1.7.10",
+        "phoenix_html": "^3.3.3",
+        "phoenix_live_view": "0.20.1",
+        "topbar": "^2.0.1",
+      },
+      "devDependencies": {
+        "@types/bun": "1.0.7",
+        "@types/cookie": "^0.6.0",
+        "@types/phoenix": "^1.6.4",
+        "@types/phoenix_live_view": "^0.18.4",
+        "typescript": "^5.4.2",
+      },
+      "peerDependencies": {
+        "typescript": "^5.0.0",
+      },
+    },
+    "packages/core": {
+      "name": "hotdogjs",
+      "version": "0.2.1",
+      "bin": {
+        "hotdogjs": "./src/server/start.ts",        "hotdogjs-watch": "./src/server/watch.ts",        "hotdogjs-build": "./src/server/build.ts",        "hotdogjs-eject": "./src/server/eject.ts"      },
+      "devDependencies": {
+        "typescript": "^5.4.2",
+      },
+      "peerDependencies": {
+        "@hotdogjs/client": "*",
+        "typescript": "^5.0.0",
+      },
+    },
+    "packages/create-hotdogjs": {
+      "name": "create-hotdogjs",
+      "version": "0.0.1",
+      "dependencies": {
+        "@hotdogjs/form": "^0.0.5",
+        "hotdogjs": "^0.2.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/cookie": "^0.6.0",
+        "@types/phoenix": "^1.6.4",
+        "@types/phoenix_live_view": "^0.18.4",
+        "phoenix": "^1.7.10",
+        "phoenix_html": "^3.3.3",
+        "phoenix_live_view": "0.20.1",
+        "topbar": "^2.0.1",
+      },
+      "peerDependencies": {
+        "typescript": "^5.0.0",
+      },
+    },
+    "packages/examples": {
+      "name": "hotdogjs-examples",
+      "dependencies": {
+        "@hotdogjs/client": "workspace:*",
+        "@hotdogjs/form": "workspace:*",
+        "hotdogjs": "workspace:*",
+        "zod": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5.0.0",
+      },
+    },
+    "packages/form": {
+      "name": "@hotdogjs/form",
+      "version": "0.0.5",
+      "dependencies": {
+        "hotdogjs": "^0.2.0",
+        "zod": "latest",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5.0.0",
+      },
+    },
+  },
+  "packages": {
+    "@hotdogjs/client": ["@hotdogjs/client@workspace:packages/client"],
+
+    "@hotdogjs/form": ["@hotdogjs/form@workspace:packages/form"],
+
+    "@types/bun": ["@types/bun@1.0.7", "", { "dependencies": { "bun-types": "1.0.28" } }, "sha512-zaPoQi+uBaqy7BwAh6HQ5dSt6H95XeejCSGEukXHYO32xIPdzPXJjNzmCJ64TWCpM4+R7WyPMdCnkZyETAZfuw=="],
+
+    "@types/cookie": ["@types/cookie@0.6.0", "", {}, "sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA=="],
+
+    "@types/node": ["@types/node@20.11.30", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-dHM6ZxwlmuZaRmUPfv1p+KrdD1Dci04FbdEm/9wEMouFqxYoFl5aMkt0VMAUtYRQDyYvD41WJLukhq/ha3YuTw=="],
+
+    "@types/phoenix": ["@types/phoenix@1.6.6", "", {}, "sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A=="],
+
+    "@types/phoenix_live_view": ["@types/phoenix_live_view@0.18.5", "", { "dependencies": { "@types/phoenix": "*" } }, "sha512-mxj3KVkp+wX+hLFAILTbfIx5Q890TBgs/jxc6nmmVv6bW6Z9qer/5tZtGOcL3IES75QqqOHSTrjwwz0iZBs0lw=="],
+
+    "@types/ws": ["@types/ws@8.5.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw=="],
+
+    "bun-types": ["bun-types@1.0.28", "", { "dependencies": { "@types/node": "~20.11.3", "@types/ws": "~8.5.10" } }, "sha512-wQqbLYRM0YnsXZMFujbCr/9YxlEl51jshMXcJ2Y9wEuU7k6TKcX2KDh032k9oHfB1wH8/SleXboIsULMtFaAaA=="],
+
+    "create-hotdogjs": ["create-hotdogjs@workspace:packages/create-hotdogjs"],
+
+    "hotdogjs": ["hotdogjs@workspace:packages/core"],
+
+    "hotdogjs-examples": ["hotdogjs-examples@workspace:packages/examples"],
+
+    "phoenix": ["phoenix@1.7.18", "", {}, "sha512-Qo+V9+knfEd+R1pzCe+XJlj3GPSxWz4PNwzFl7GgssuTVYPoh/he3mbPQJ+NEDdqulxAbBtWCNYGPB3WplS5Mg=="],
+
+    "phoenix_html": ["phoenix_html@3.3.4", "", {}, "sha512-IkKAeP4sAuFzwtSSUbSNP/nL0H6WHcHfpe+/F7wOzyjYtijkAO2wTH8maA7vpTRhUBU5Dck5V8SEEhDuUy1mMA=="],
+
+    "phoenix_live_view": ["phoenix_live_view@0.20.1", "", {}, "sha512-bEFec53iySU9MvSIgGA/T7F8Ikqvu5qlFzBn+nY88T36ZsIp/8SJJZqF8foWMOb7+Pb721tt04cz6T7dq0ZdrA=="],
+
+    "topbar": ["topbar@2.0.2", "", {}, "sha512-hCKoSaWxXqGIgjag8rIVajysE41as7ti5z9GDO5rcx2zmII1/rY5zvO9IgKwbf50HL82EzlimL6OmPYPUgbpEw=="],
+
+    "typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
+
+    "undici-types": ["undici-types@5.26.5", "", {}, "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="],
+
+    "zod": ["zod@3.24.1", "", {}, "sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A=="],
+
+    "@hotdogjs/form/@types/bun": ["@types/bun@1.2.2", "", { "dependencies": { "bun-types": "1.2.2" } }, "sha512-tr74gdku+AEDN5ergNiBnplr7hpDp3V1h7fqI2GcR/rsUaM39jpSeKH0TFibRvU0KwniRx5POgaYnaXbk0hU+w=="],
+
+    "@types/ws/@types/node": ["@types/node@22.12.0", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA=="],
+
+    "create-hotdogjs/@types/bun": ["@types/bun@1.2.1", "", { "dependencies": { "bun-types": "1.2.1" } }, "sha512-iiCeMAKMkft8EPQJxSbpVRD0DKqrh91w40zunNajce3nMNNFd/LnAquVisSZC+UpTMjDwtcdyzbWct08IvEqRA=="],
+
+    "@hotdogjs/form/@types/bun/bun-types": ["bun-types@1.2.2", "", { "dependencies": { "@types/node": "*", "@types/ws": "~8.5.10" } }, "sha512-RCbMH5elr9gjgDGDhkTTugA21XtJAy/9jkKe/G3WR2q17VPGhcquf9Sir6uay9iW+7P/BV0CAHA1XlHXMAVKHg=="],
+
+    "@types/ws/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
+
+    "create-hotdogjs/@types/bun/bun-types": ["bun-types@1.2.1", "", { "dependencies": { "@types/node": "*", "@types/ws": "~8.5.10" } }, "sha512-p7bmXUWmrPWxhcbFVk7oUXM5jAGt94URaoa3qf4mz43MEhNAo/ot1urzBqctgvuq7y9YxkuN51u+/qm4BiIsHw=="],
+
+    "@hotdogjs/form/@types/bun/bun-types/@types/node": ["@types/node@22.12.0", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA=="],
+
+    "create-hotdogjs/@types/bun/bun-types/@types/node": ["@types/node@22.12.0", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA=="],
+
+    "@hotdogjs/form/@types/bun/bun-types/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
+
+    "create-hotdogjs/@types/bun/bun-types/@types/node/undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
+  }
+}
