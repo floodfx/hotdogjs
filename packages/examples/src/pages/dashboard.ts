@@ -38,15 +38,14 @@ export default class Dashboard extends BaseView<Event> {
     }
   }
 
-  render(meta: RenderMeta<Event>) {
-    const { component } = meta;
+  render(meta: RenderMeta) {
     return html`
       <div class="flex flex-col items-center justify-start h-screen pt-10 gap-10">
         <h1 class="text-2xl font-bold">Sales Dashboard</h1>
         <div class="stats shadow">
-          ${component(new Stat("🥡 New Orders", this.newOrders))}
-          ${component(new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount)))}
-          ${component(new Stat("🌟 Rating", ratingToStars(this.rating)))}
+          ${new Stat("🥡 New Orders", this.newOrders)}
+          ${new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount))}
+          ${new Stat("🌟 Rating", ratingToStars(this.rating))}
         </div>
         <button class="btn btn-primary" hd-click="refresh">↻ Refresh</button>
       </div>

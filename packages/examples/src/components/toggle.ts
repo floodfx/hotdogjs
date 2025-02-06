@@ -1,8 +1,7 @@
 import { BaseComponent, html, type ComponentContext } from "hotdogjs";
 
-export class Checkbox extends BaseComponent {
+export class Toggle extends BaseComponent {
   checked: boolean;
-  preloaded: boolean = false;
 
   constructor(props: { id: number; checked: boolean }) {
     super();
@@ -10,14 +9,7 @@ export class Checkbox extends BaseComponent {
     this.id = props.id;
   }
 
-  preload(cs: Checkbox[]): Checkbox[] {
-    return cs.map((c) => {
-      c.preloaded = true;
-      return c;
-    });
-  }
-
-  handleEvent(ctx: ComponentContext<any>, event: any) {
+  handleEvent(_ctx: ComponentContext<any>, event: any) {
     switch (event.type) {
       case "toggle":
         this.checked = !this.checked;
@@ -27,8 +19,8 @@ export class Checkbox extends BaseComponent {
   render() {
     return html`<input
       type="checkbox"
+      class="toggle"
       ${this.checked ? "checked" : ""}
-      data-preloaded=${this.preloaded}
       hd-click="toggle"
       hd-target="${this.cid}" /> `;
   }
