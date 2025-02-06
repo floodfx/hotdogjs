@@ -1,4 +1,5 @@
 import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
+import { Btn } from "src/components/button";
 
 type Event = { type: "inc" } | { type: "dec" };
 
@@ -25,14 +26,13 @@ export default class Counter extends BaseView<Event> {
 
   render() {
     return html`
-      <div class="stats shadow m-4">
+      <div class="stats shadow-lg border-2 border-primary m-4">
         <div class="stat">
           <div class="stat-title">Count</div>
           <div class="stat-value">${this.count}</div>
           <div class="stat-desc">click the buttons to adjust</div>
           <div class="stat-actions">
-            <button class="btn btn-sm" hd-click="dec">-</button>
-            <button class="btn btn-sm" hd-click="inc">+</button>
+            ${new Btn<Event>({ label: "-", onClick: "dec" })} ${new Btn<Event>({ label: "+", onClick: "inc" })}
           </div>
         </div>
       </div>

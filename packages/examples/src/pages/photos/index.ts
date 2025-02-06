@@ -97,7 +97,7 @@ export default class Photos extends BaseView<PhotosEvents> {
     }
   }
 
-  render(meta: RenderMeta<PhotosEvents>) {
+  render(meta: RenderMeta) {
     const { uploads } = meta;
     return html`
       <div class="flex flex-col items-center">

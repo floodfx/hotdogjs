@@ -1,5 +1,5 @@
-import { BaseComponent, BaseView, html, type AnyEvent, type RenderMeta, type ViewContext } from "hotdogjs";
-import { Checkbox } from "../components/toggle";
+import { BaseComponent, BaseView, html, type AnyEvent, type ViewContext } from "hotdogjs";
+import { Toggle } from "src/components/toggle";
 
 class Hello extends BaseComponent<AnyEvent> {
   name: string;
@@ -20,16 +20,15 @@ export default class Index extends BaseView<AnyEvent> {
     }
   }
 
-  render(meta: RenderMeta<AnyEvent>) {
-    const { component } = meta;
-    var checkbox = component(new Checkbox({ id: 1, checked: false }));
+  render() {
+    var toggle = new Toggle({ id: 1, checked: false });
     return html`
       <h2>Hello</h2>
       <p>Welcome to the HotdogJS example app.</p>
-      ${component(new Hello({ name: "world" }))}, ${component(new Hello({ name: "Donnie" }))}
-      <h2>Checkbox</h2>
-      <div>Not Checked ${checkbox}</div>
-      <div>Checked ${component(new Checkbox({ id: 2, checked: true }))}</div>
+      ${new Hello({ name: "world" })}, ${new Hello({ name: "Donnie" })}
+      <h2>Toggle</h2>
+      <div>Not Checked ${toggle}</div>
+      <div>Checked ${new Toggle({ id: 2, checked: true })}</div>
 
       <button hd-click="redirect-me">Redirect</button>
     `;

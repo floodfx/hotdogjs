@@ -11,7 +11,7 @@ Hotdogjs's key features are:
  * Server-side state management with automatic client-side updates
  * Automatic, performant, diff-based communication protocol
  * LiveView per file with file-based routing
- * Hot reloading based development
+ * Hot reloading based development with no compilation
 
 ## How does Hotdogjs work?
 At a high level, LiveViews automatically detect registered events (clicks, form updates, etc.) and routes these events (and metadata) from client to server over a websocket.  When the server receives an event, it routes it to a developer defined handler which can update the server state and kicks off a re-render.  The server then calculates a view diff and sends this diff back to the client which is automatically applied to the DOM.
@@ -36,9 +36,9 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Anatomy of a Hotdogjs project
- * `public/` - Static assets including html templates and client-side javascript
+ * `public/` - Location of static assets like client-side javascript
  * `views/` - Hotdogjs LiveViews routed based on [File System Router](https://bun.sh/docs/api/file-system-router); all `.ts` files in this directory are expected to be LiveViews
- * `src/` - Hotdogjs server-side code
+ * `layouts/` - Template for laying out the Views
  * `package.json` - Node.js compatible package.json with required dependencies and default scripts
  * `hotdogjs-conf.toml` - (optional) hotdogjs configuration file for overriding default configuration
 
@@ -55,6 +55,19 @@ A `View` is a web page that responds to events, updates its state, and generates
  * `handleEvent` is called when an event is received from the client or server. This method is useful for updating the state of the `View` based on the event and is the main way to handle user interactions or server-based events with the `View`.
  * `render` defines the HTML to render for the `View` based on the current state.  This method is called once when the `View` is mounted and again whenever the `View` state changes.
  * `shutdown` is called when the `View` is being shutdown / unmounted.  This method is useful for cleaning up any resources that the `View` may have allocated.
+ * `layoutName` is an optional property that can be used to specify the layout to use for the `View`.  If not specified, the `View` will use the `default.html` layout in the `layouts/` directory.
+
+
+## Components
+Components are small, reusable pieces of UI that can be used across multiple `View`s.  You should put components somewhere outside of the `views/` directory so they aren't routed to accidentally.  `Components` can be stateless or stateful and encapsulate their own state in the latter case.  Components are rendered using the `component` method which takes a `Component` class and returns an instance of that class.
+
+### Component API
+Components have the following API:
+ * `mount` is called once before the `Component` is rendered. It is useful for setting up initial state based on parameters passed to the `Component` from the `View`.  `Component`s with an `id` property are stateful (regardless of if you are actually using state) and those without an `id` are stateless.
+ * `update` is called prior to the `render` method for both stateful and stateless `Component`s.  This method is useful for additional business logic that needs to be executed prior to rendering the `Component`.
+ * `handleEvent` if your `Component` is stateful (i.e. it has an `id` property), this method must be implemented and is called when an event is received from the client or server. This method is useful for updating the state of the `Component` based on the event and is the main way to handle user interactions or server-based events with the `Component`.
+ * `render` defines the HTML to render for the `Component` based on the current state.  This method is called once when the `Component` is mounted and again whenever the `Component` state changes (if it is stateful).
+ * `shutdown` is called when the `Component` is being shutdown / unmounted.  This method is useful for cleaning up any resources that the `Component` may have allocated.
 
 
 ## Ejecting a Hotdogjs project

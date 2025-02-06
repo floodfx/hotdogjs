@@ -55,7 +55,7 @@ export default class Books extends BaseView<Events> {
     }
   }
 
-  render(meta: RenderMeta<Events>) {
+  render(meta: RenderMeta) {
     return html`
       <h1>My Library</h1>
 
