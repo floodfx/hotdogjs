@@ -1,6 +1,6 @@
 import { type ServerWebSocket } from "bun";
 // workaround for global.BroadcastChannel type error
-// import { BroadcastChannel } from "node:worker_threads";
+import { BroadcastChannel } from "node:worker_threads";
 import { URL } from "url";
 import type { Component, ComponentContext } from "../component/component";
 import { Template, type Tree } from "../template";
@@ -291,7 +291,13 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
     }
   }
 
-  component(c: Component<any, Template>): Template {
+  /**
+   * Used to either render a stateless component to a template or add a placeholder for a stateful component
+   * which is later updated with the component render result.
+   * @param c the `Component` to fully render or add a placeholder for
+   * @returns a `Template` representing the rendered component or a placeholder
+   */
+  renderComponent(c: Component<any, Template>): Template {
     try {
       // setup socket
       const cCtx: ComponentContext = {
@@ -305,7 +311,8 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         },
       };
 
-      // STATEFUL
+      // STATEFUL - return a placeholder template if the component has an id
+      // this placeholder will be replaced by the component render result in the template
       if (c.id) {
         const { hash, id } = c;
         const uid = `${hash}_${id}`;
@@ -329,7 +336,7 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
         );
       }
 
-      // STATELESS
+      // STATELESS - return the component render result
       // always run full mount => update => render
       c.mount(cCtx);
       c.update(cCtx);

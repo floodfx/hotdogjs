@@ -1,6 +1,5 @@
 import { type MatchedRoute } from "bun";
 import { URL } from "node:url";
-import { type Component } from "../component/component";
 import { Template, templateFromString } from "../template";
 import { UploadConfig } from "../ws/handler/uploadConfig";
 import { type ViewContext } from "./context";
@@ -58,7 +57,7 @@ export type MountEvent<R extends Record<string, string> = {}> = {
  * Meta data passed to the render function of a View with additional
  * information sometimes needed for rendering.
  */
-export interface RenderMeta<E extends AnyEvent> {
+export interface RenderMeta {
   /**
    * The csrf token for the request, useful for passing along to forms
    * to prevent CSRF attacks.
@@ -70,13 +69,6 @@ export interface RenderMeta<E extends AnyEvent> {
    * handing uploads in the view.
    */
   readonly uploads: { [key: string]: UploadConfig };
-
-  /**
-   * Helper method to rendering a `Component` in the `View.render` method.
-   * @param c  the `Component` to render
-   * @returns a `Template` that represents the `Component` in the `View.render`
-   */
-  component: (c: Component<E, Template>) => Template;
 }
 
 /**
@@ -126,7 +118,7 @@ export interface View<E extends ViewEvent, RenderResult> {
    *
    * @param meta the `RenderMeta` that is passed to the `View` when rendering
    */
-  render(meta: RenderMeta<E>): RenderResult | Promise<RenderResult>;
+  render(meta: RenderMeta): RenderResult | Promise<RenderResult>;
 
   /**
    * `shutdown` is called when the `View` is being shutdown / unmounted.  This method is useful
@@ -164,7 +156,7 @@ export abstract class BaseView<E extends ViewEvent, R extends Record<string, str
 
   layoutName?: string;
 
-  abstract render(meta: RenderMeta<E>): Template | Promise<Template>;
+  abstract render(meta: RenderMeta): Template | Promise<Template>;
 }
 
 /**

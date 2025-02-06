@@ -98,7 +98,6 @@ export async function onProgressUpload(ctx: WsViewContext, payload: Phx.Progress
   return await ctx.view.render({
     csrfToken: ctx.csrfToken,
     uploads: ctx.uploadConfigs,
-    component: (c) => ctx.component(c),
   });
 }
 
@@ -143,7 +142,6 @@ export async function onAllowUpload(ctx: WsViewContext, payload: Phx.AllowUpload
   const view = await ctx.view.render({
     csrfToken: ctx.csrfToken,
     uploads: ctx.uploadConfigs,
-    component: (c) => ctx.component(c),
   });
   return {
     entries: entriesReply,

@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { type ReactNode } from "react";
 import type { Template } from "../template";
 import type { Event } from "../view/context";
 import type { AnyEvent, AnyPushEvent, ViewEvent } from "../view/view";
@@ -137,7 +136,7 @@ export abstract class BaseComponent<E extends ViewEvent = AnyEvent> extends Defa
  * `BaseJSXComponent` is a base class for creating `Component`s that render JSX.  It is highly
  * experimental and probably should not be used yet.
  */
-export abstract class BaseJSXComponent<E extends ViewEvent = AnyEvent> extends DefaultComponent<E, ReactNode> {}
+// export abstract class BaseJSXComponent<E extends ViewEvent = AnyEvent> extends DefaultComponent<E, ReactNode> {}
 
 /**
  * Calculates the "hash" (opaque string) of a Component.  Used by the framework

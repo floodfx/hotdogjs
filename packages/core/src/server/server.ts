@@ -2,8 +2,7 @@ import { BunFile, FileSystemRouter, type BuildOutput, type MatchedRoute, type We
 import { randomUUID } from "crypto";
 import { watch, type FSWatcher } from "fs";
 import { URL } from "url";
-import type { Component, ComponentContext } from "../component/component";
-import { html, safe, templateFromString, type Template } from "../template";
+import { html, safe, templateFromString } from "../template";
 import { HttpViewContext } from "../view/context";
 import type { AnyEvent, BaseView, MountEvent } from "../view/view";
 import { WsHandler, type WsHandlerOptions } from "../ws/handler";
@@ -237,29 +236,11 @@ export class Server {
       return Response.redirect(ctx.redirectEvent.to, 302);
     }
 
-    const cCtx: ComponentContext<AnyEvent> = {
-      parentId: viewId,
-      connected: false,
-      dispatchEvent: (event: AnyEvent) => {
-        ctx.dispatchEvent(event);
-      },
-      pushEvent: (pushEvent: AnyEvent) => {
-        ctx.pushEvent(pushEvent);
-      },
-    };
-
-    // replace `component` method with one that just renders all the components
-    const component = (c: Component<AnyEvent, Template>) => {
-      c.mount(cCtx);
-      c.update(cCtx);
-      return c.render();
-    };
-
     // render to get the components into preloaded state
-    const tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs, component });
+    const tmpl = await view.render({ csrfToken: csrfToken, uploads: ctx.uploadConfigs });
     const content = html`<${htmlTag} data-phx-main="true" data-phx-session="" data-phx-static="" id="phx-${viewId}">
-    ${safe(tmpl)}
-  </${htmlTag}>`;
+      ${safe(tmpl)}
+    </${htmlTag}>`;
 
     // use layout from view if defined otherwise use the resolver
     var layout: string;
