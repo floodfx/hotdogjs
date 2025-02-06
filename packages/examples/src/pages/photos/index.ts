@@ -55,7 +55,7 @@ export default class Photos extends BaseView<PhotosEvents> {
             id: entry.uuid,
             external: false,
             mime: entry.type,
-            data: entry.data,
+            data: entry.data as unknown as Uint8Array,
             favorite: false,
           });
           if (photo) {

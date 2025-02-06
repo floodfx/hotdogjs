@@ -4,6 +4,7 @@ type Event = { type: "inc" } | { type: "dec" };
 
 export default class Counter extends BaseView<Event> {
   count: number = 0;
+  layoutName = "nav.html";
 
   mount(ctx: ViewContext<Event>, e: MountEvent) {
     this.count = parseInt(e.params.count) || 0;
