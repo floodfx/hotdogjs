@@ -66,7 +66,7 @@ export function deepDiff(oldParts: Tree, newParts: Tree): Tree {
           diff[key] = newParts[key];
         }
       }
-      // if both are numbers they are references to `LiveComponents`
+      // if both are numbers they are references to `Components`
       else if (typeof newParts[key] === "number" && typeof oldParts[key] === "number") {
         if (newParts[key] !== oldParts[key]) {
           diff[key] = newParts[key];

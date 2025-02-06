@@ -117,7 +117,7 @@ export class Template {
     // otherwise walk the dynamics and build the parts tree
     const tree = this.dynamics.reduce((acc: Tree, cur: unknown, index: number) => {
       if (cur instanceof Template) {
-        // handle isLiveComponent case
+        // handle isComponent case
         if (cur.isComponent) {
           // for `Components`, we only send back a number which
           // is the index of the component in the `c` key
@@ -185,7 +185,7 @@ export class Template {
                 [`${index}`]: { d },
               };
             }
-            // not an array of LiveComponents so return the statics too
+            // not an array of Components so return the statics too
             s = cur.map((c: Template) => c.statics)[0];
             return {
               ...acc,
