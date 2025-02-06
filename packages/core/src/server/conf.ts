@@ -50,10 +50,16 @@ export type ConfOptions = {
   staticExcludes: string[];
 
   /**
-   * A function that defines how to resolve the view template for a given route.
-   * This is useful for customizing the view template based on the route.
+   * Directory where layout templates are served from relative to the server.
+   * Defaults to "/layouts"
    */
-  viewTemplateResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
+  layoutsDir: string;
+
+  /**
+   * A function that defines how to resolve the layout template for a given route.
+   * This is useful for customizing the layout template based on the route.
+   */
+  layoutResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
 
   /**
    * Base URL for the websocket (allows websocket to be served from a different domain)
@@ -74,6 +80,7 @@ export type ConfOptions = {
  * HD_VIEWS_DIR - overrides viewsDir
  * HD_STATIC_PREFIX - overrides staticPrefix
  * HD_STATIC_EXCLUDES - overrides staticExcludes
+ * HD_LAYOUTS_DIR - overrides layoutsDir
  * HD_WS_BASE_URL - overrides wsBaseUrl
  */
 export class Conf {
@@ -84,8 +91,9 @@ export class Conf {
   skipBuildingClientJS: boolean;
   staticPrefix: string;
   staticExcludes: string[];
+  layoutsDir: string;
+  layoutResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
   wsBaseUrl: string;
-  viewTemplateResolver?: (matchedRoute: MatchedRoute, conf: Conf) => Promise<string>;
 
   constructor(options: Partial<ConfOptions> = {}) {
     this.publicDir = getOrElse("HD_PUBLIC_DIR", options.publicDir ?? process.cwd() + "/public");
@@ -95,7 +103,8 @@ export class Conf {
     this.skipBuildingClientJS = getOrElse("HD_SKIP_BUILDING_CLIENT_JS", options.skipBuildingClientJS ?? false);
     this.staticPrefix = getOrElse("HD_STATIC_PREFIX", options.staticPrefix ?? "/static");
     this.staticExcludes = getOrElse("HD_STATIC_EXCLUDES", options.staticExcludes ?? ["index.html"]);
-    this.viewTemplateResolver = options.viewTemplateResolver;
+    this.layoutsDir = getOrElse("HD_LAYOUTS_DIR", options.layoutsDir ?? process.cwd() + "/layouts");
+    this.layoutResolver = options.layoutResolver;
     this.wsBaseUrl = getOrElse("HD_WS_BASE_URL", options.wsBaseUrl ?? "");
   }
 }

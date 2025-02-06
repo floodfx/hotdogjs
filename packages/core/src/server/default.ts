@@ -62,5 +62,5 @@ export async function defaultServeConfig(): Promise<Serve<ServerInfo>> {
     maxRequestBodySize: process.env.MAX_REQUEST_BODY_SIZE
       ? parseInt(process.env.MAX_REQUEST_BODY_SIZE)
       : 1024 * 1024 * 50, // 50mb
-  } as Serve<ServerInfo>;
+  } satisfies Serve<ServerInfo>;
 }

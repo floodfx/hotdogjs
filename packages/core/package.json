@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "description": "Hot-reloading, multi-player, single-file LiveViews at the speed of Bun",
   "devDependencies": {
-    "typescript": "^5.4.2"
+    "typescript": "^5.7.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0",
