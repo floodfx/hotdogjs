@@ -43,7 +43,7 @@ export namespace Phx {
     type: T;
     event: E;
     value: V;
-    cid?: number; // LiveComponent id (if event is from a LiveComponent)
+    cid?: number; // Component id (if event is from a Component)
   };
 
   /**

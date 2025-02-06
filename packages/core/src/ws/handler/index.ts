@@ -395,7 +395,7 @@ export class WsHandler<R extends object, T> {
     this.#ctx!.parts = newParts;
 
     // now add the components, events, and title parts
-    diff = this.maybeAddLiveComponentsToParts(diff);
+    diff = this.maybeAddComponentsToParts(diff);
     diff = this.maybeAddEventsToParts(diff);
     return this.maybeAddTitleToView(diff);
   }
@@ -407,8 +407,8 @@ export class WsHandler<R extends object, T> {
     // step 2: store parts for later diffing after rootTemplate is applied
     let parts = tmpl.toTree(true, this.#ctx!.renderComponent.bind(this.#ctx));
 
-    // step 3: add any `LiveComponent` renderings to the parts tree
-    parts = this.maybeAddLiveComponentsToParts(parts);
+    // step 3: add any `Component` renderings to the parts tree
+    parts = this.maybeAddComponentsToParts(parts);
 
     // step 4: add any push events to the parts tree
     parts = this.maybeAddEventsToParts(parts);
@@ -457,7 +457,7 @@ export class WsHandler<R extends object, T> {
     return tmpl;
   }
 
-  private maybeAddLiveComponentsToParts(tree: Tree) {
+  private maybeAddComponentsToParts(tree: Tree) {
     const changedParts: Tree = {};
     // iterate over stateful components to find changed
     Object.values(this.#ctx!.statefulComponents).forEach((c) => {
@@ -467,7 +467,7 @@ export class WsHandler<R extends object, T> {
     });
     // if any stateful component changed
     if (Object.keys(changedParts).length > 0) {
-      // return parts with changed LiveComponents
+      // return parts with changed Components
       return {
         ...tree,
         c: changedParts,

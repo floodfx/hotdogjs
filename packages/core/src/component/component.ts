@@ -63,26 +63,26 @@ export interface Component<E extends ViewEvent, RenderResult> {
   readonly hash: string;
 
   /**
-   * Mounts the `LiveComponent`'s stateful context.  This is called only once
-   * for stateful `LiveComponent` and every render for a stateless `LiveComponent`.
+   * Mounts the `Component`'s stateful context.  This is called only once
+   * for stateful `Component` and every render for a stateless `Component`.
    * This is called prior to `update` and `render`.
    *
    */
   mount: (ctx: ComponentContext<E>) => void;
 
   /**
-   * Allows the `LiveComponent` to update its stateful context.  This is called
-   * prior to `render` for both stateful and stateless `LiveComponent`s.  This is a
-   * good place to add additional business logic to the `LiveComponent` if you
-   * need to change the context (e.g. derive data from or transform) of the `LiveComponentSocket`.
+   * Allows the `Component` to update its state.  This is called
+   * prior to `render` for both stateful and stateless `Component`s.  This is a
+   * good place to add additional business logic to the `Component` if you
+   * need to change the context (e.g. derive data from or transform).
    *
-   * @param ctx a `ComponentContext` with the context for this `LiveComponent`
+   * @param ctx a `ComponentContext` with the context for this `Component`
    */
   update: (ctx: ComponentContext<E>) => void;
 
   /**
-   * Optional method that handles events from the `LiveComponent` initiated by the end-user. Only
-   * called for "stateful" `LiveComponent`s (i.e. `LiveComponent`s with an "id" in their context).
+   * Optional method that handles events from the `Component` initiated by the end-user. Only
+   * called for "stateful" `Component`s (i.e. `Component`s with an "id" in their context).
    * In other words, only components with an `id` attribute in their "LiveContext" can handleEvents.
    */
   handleEvent?: (ctx: ComponentContext<E>, event: E) => void;
@@ -117,7 +117,7 @@ abstract class DefaultComponent<E extends ViewEvent, T> implements Component<E, 
   #hash?: string;
   get hash(): string {
     if (!this.#hash) {
-      this.#hash = hashLiveComponent(this);
+      this.#hash = hashComponent(this);
     }
     return this.#hash;
   }
@@ -143,7 +143,7 @@ export abstract class BaseComponent<E extends ViewEvent = AnyEvent> extends Defa
  * internally to create a unique id for Components for sorting into preload
  * component groups.
  */
-function hashLiveComponent(c: Component<any, any>): string {
+function hashComponent(c: Component<any, any>): string {
   const code =
     (c.constructor?.toString() ?? "") +
     (c.mount?.toString() ?? "") +
