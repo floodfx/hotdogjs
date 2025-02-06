@@ -133,6 +133,13 @@ export interface View<E extends ViewEvent, RenderResult> {
    * for cleaning up any resources that the `View` may have allocated.
    */
   shutdown(): void | Promise<void>;
+
+  /**
+   * `layoutName` is the name of the layout template for the `View` which will be resolved
+   * from the `layoutsDir` directory.  If not defined, the `View` will be rendered with the default
+   * layout template.
+   */
+  layoutName?: string;
 }
 
 /**
@@ -154,6 +161,8 @@ export abstract class BaseView<E extends ViewEvent, R extends Record<string, str
   shutdown(): void | Promise<void> {
     // noop
   }
+
+  layoutName?: string;
 
   abstract render(meta: RenderMeta<E>): Template | Promise<Template>;
 }

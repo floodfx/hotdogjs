@@ -70,7 +70,9 @@ export interface UploadEntry {
    * Errors that have occurred during selection or upload.
    */
   errors: string[];
-
+  /**
+   * The data of the file being uploaded
+   */
   readonly data: Buffer;
 }
 

@@ -21,6 +21,7 @@ function writeTempFile(dest: string, data: Buffer) {
   writeFileSync(dest, data);
 }
 function createOrAppendFile(dest: string, src: string) {
+  // @ts-ignore - https://github.com/oven-sh/bun/issues/14892
   appendFileSync(dest, readFileSync(src));
 }
 
@@ -41,7 +42,6 @@ export async function onUploadBinary(ctx: WsViewContext, msg: Phx.Msg<Buffer>): 
     // find entry from topic ref
     const entry = activeUploadConfig.entries.find((e) => e.ref === ref) as DefaultUploadEntry;
     if (!entry) {
-      // istanbul ignore next
       throw Error(`Could not find entry for ref ${ref} in uploadConfig ${JSON.stringify(activeUploadConfig)}`);
     }
 
@@ -79,7 +79,6 @@ export async function onUploadBinary(ctx: WsViewContext, msg: Phx.Msg<Buffer>): 
 
 export async function onProgressUpload(ctx: WsViewContext, payload: Phx.ProgressUploadPayload): Promise<Template> {
   const { ref, entry_ref, progress } = payload;
-  // console.log("onProgressUpload handle", ref, entry_ref, progress);
 
   // iterate through uploadConfigs and find the one that matches the ref
   const uploadConfig = Object.values(ctx.uploadConfigs).find((config) => config.ref === ref);
@@ -115,7 +114,6 @@ export async function onAllowUpload(ctx: WsViewContext, payload: Phx.AllowUpload
   ctx.activeUploadRef = ref;
   const uc = Object.values(ctx.uploadConfigs).find((c) => c.ref === ref);
   if (!uc) {
-    // istanbul ignore next
     throw Error(`Could not find upload config for ref ${ref}`);
   }
 
@@ -141,7 +139,6 @@ export async function onAllowUpload(ctx: WsViewContext, payload: Phx.AllowUpload
       console.error("Error serializing entry", e);
     }
   });
-  console.log("onAllowUpload handle", ref, entriesReply);
 
   const view = await ctx.view.render({
     csrfToken: ctx.csrfToken,
