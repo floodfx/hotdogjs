@@ -389,7 +389,7 @@ export class WsHandler<R extends object, T> {
     tmpl = await this.maybeWrapView(tmpl);
 
     // diff the new view with the old view
-    const newParts = tmpl.toTree(true);
+    const newParts = tmpl.toTree(true, this.#ctx!.renderComponent.bind(this.#ctx));
     let diff = deepDiff(this.#ctx!.parts, newParts);
     // store newParts for future diffs
     this.#ctx!.parts = newParts;
@@ -405,7 +405,7 @@ export class WsHandler<R extends object, T> {
     tmpl = await this.maybeWrapView(tmpl);
 
     // step 2: store parts for later diffing after rootTemplate is applied
-    let parts = tmpl.toTree(true);
+    let parts = tmpl.toTree(true, this.#ctx!.renderComponent.bind(this.#ctx));
 
     // step 3: add any `LiveComponent` renderings to the parts tree
     parts = this.maybeAddLiveComponentsToParts(parts);
@@ -461,6 +461,7 @@ export class WsHandler<R extends object, T> {
     const changedParts: Tree = {};
     // iterate over stateful components to find changed
     Object.values(this.#ctx!.statefulComponents).forEach((c) => {
+      // TODO - diff the old tree with the new tree for these components
       const newTree = c.render().toTree(true);
       changedParts[`${c.cid}`] = newTree;
     });
@@ -517,13 +518,10 @@ export class WsHandler<R extends object, T> {
     this.handleMsg([null, null, this.#ctx!.joinId, "info", info] as Phx.Msg);
   }
 
-  meta<E extends AnyEvent>(): RenderMeta<E> {
+  meta(): RenderMeta {
     return {
       csrfToken: this.#csrfToken,
       uploads: this.#ctx!.uploadConfigs,
-      component: (c) => {
-        return this.#ctx!.component(c);
-      },
     };
   }
 }

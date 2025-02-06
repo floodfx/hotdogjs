@@ -1,3 +1,6 @@
+import { BaseComponent, Component, type ComponentContext } from "src/component/component";
+import type { AnyEvent } from "src/view/view";
+
 const ENTITIES: {
   [key: string]: string;
 } = {
@@ -68,7 +71,33 @@ export class Template {
     this.isComponent = isComponent;
   }
 
-  toTree(includeStatics: boolean = true): Tree {
+  /**
+   * Applies a component renderer by mutating the dynamics of the template
+   * @param renderer the function to render a component to a template
+   */
+  private applyComponentRenderer(renderer: (c: Component<any, Template>) => Template) {
+    const newDynamics = [...this.dynamics];
+    this.dynamics.forEach((d, i) => {
+      if (d instanceof BaseComponent) {
+        newDynamics[i] = renderer(d as Component<any, Template>);
+      }
+    });
+    // work around readonly array
+    (this.dynamics as unknown[]) = newDynamics;
+  }
+
+  /**
+   * Converts the Template to a tree of parts.
+   * @param includeStatics whether to include statics in the tree
+   * @param componentRenderer optional function to render a component to a template or placeholder depending on
+   * whether the component is stateful or stateless
+   * @returns a tree of parts
+   */
+  toTree(includeStatics: boolean = true, componentRenderer?: (c: Component<any, Template>) => Template): Tree {
+    // add placeholder for components if componentRenderer is provided
+    if (componentRenderer) {
+      this.applyComponentRenderer(componentRenderer);
+    }
     // statics.length should always equal dynamics.length + 1
     if (this.dynamics.length === 0) {
       if (this.statics.length !== 1) {
@@ -194,9 +223,45 @@ export class Template {
    * @returns an HTML escaped string representation of the Template
    */
   toString(): string {
+    // component id index
+    let cidIndex = 0;
+
     return this.statics.reduce((result, s, i) => {
       const d = this.dynamics[i - 1];
-      return result + escapehtml(d) + s;
+
+      // handle rendering components
+      if (d instanceof BaseComponent) {
+        // if the component has an id, it is statefull, so set a cid for
+        // rendering purposes
+        if (d.id) {
+          d.cid = ++cidIndex;
+        }
+
+        // create a component context for the rendering purposes
+        const noopCtx: ComponentContext<AnyEvent> = {
+          parentId: i.toString(),
+          connected: false,
+          dispatchEvent: (event: AnyEvent) => {
+            // no-op
+          },
+          pushEvent: (pushEvent: AnyEvent) => {
+            // no-op
+          },
+        };
+
+        // run the component mount, update, and render methods
+        const renderComponent = (c: Component<AnyEvent, Template>) => {
+          c.mount(noopCtx);
+          c.update(noopCtx);
+          return c.render();
+        };
+        return result + renderComponent(d) + s;
+      }
+
+      // if not a component, just escape the dynamic value
+      else {
+        return result + escapehtml(d) + s;
+      }
     });
   }
 }

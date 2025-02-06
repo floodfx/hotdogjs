@@ -108,7 +108,6 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       return await ctx.view.render({
         csrfToken: ctx.csrfToken,
         uploads: ctx.uploadConfigs,
-        component: (c) => ctx.component(c),
       });
     }
 
@@ -124,7 +123,6 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       return await ctx.view.render({
         csrfToken: ctx.csrfToken,
         uploads: ctx.uploadConfigs,
-        component: (c) => ctx.component(c),
       });
     }
 
