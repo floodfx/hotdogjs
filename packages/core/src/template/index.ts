@@ -268,17 +268,9 @@ export class Template {
 
       // handle rendering components
       if (d instanceof BaseComponent) {
-        console.log("single component", d.constructor.name);
-        const renderedComponent = renderComponent(i, d);
-        return result + renderedComponent + s;
+        return result + renderComponent(i, d) + s;
       } else if (Array.isArray(d) && d.some((item) => item instanceof BaseComponent)) {
-        console.log(
-          "array of components",
-          d.map((item) => item.constructor.name)
-        );
-        const renderedComponents = d.map((item) => renderComponent(i, item));
-        // console.log(renderedComponents);
-        return result + renderedComponents.join("") + s;
+        return result + d.map((item) => renderComponent(i, item)).join("") + s;
       }
 
       // if not a component, just escape the dynamic value
