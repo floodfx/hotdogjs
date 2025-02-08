@@ -164,7 +164,7 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
     // update the component in the view
     return {
       c: {
-        [`${cid}`]: newView.toTree(true),
+        [`${cid}`]: newView.toTree(),
       },
     };
   } catch (e) {

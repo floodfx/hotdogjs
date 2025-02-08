@@ -81,6 +81,9 @@ export class Template {
       if (d instanceof BaseComponent) {
         newDynamics[i] = renderer(d as Component<any, Template>);
       }
+      if (Array.isArray(d) && d.some((item) => item instanceof BaseComponent)) {
+        newDynamics[i] = d.map((item) => renderer(item as Component<any, Template>));
+      }
     });
     // work around readonly array
     (this.dynamics as unknown[]) = newDynamics;
@@ -88,12 +91,11 @@ export class Template {
 
   /**
    * Converts the Template to a tree of parts.
-   * @param includeStatics whether to include statics in the tree
    * @param componentRenderer optional function to render a component to a template or placeholder depending on
    * whether the component is stateful or stateless
    * @returns a tree of parts
    */
-  toTree(includeStatics: boolean = true, componentRenderer?: (c: Component<any, Template>) => Template): Tree {
+  toTree(componentRenderer?: (c: Component<any, Template>) => Template): Tree {
     // add placeholder for components if componentRenderer is provided
     if (componentRenderer) {
       this.applyComponentRenderer(componentRenderer);
@@ -116,6 +118,7 @@ export class Template {
 
     // otherwise walk the dynamics and build the parts tree
     const tree = this.dynamics.reduce((acc: Tree, cur: unknown, index: number) => {
+      // Single Template
       if (cur instanceof Template) {
         // handle isComponent case
         if (cur.isComponent) {
@@ -144,11 +147,13 @@ export class Template {
           else {
             return {
               ...acc,
-              [`${index}`]: cur.toTree(), // recurse to children
+              [`${index}`]: cur.toTree(componentRenderer), // recurse to children
             };
           }
         }
-      } else if (Array.isArray(cur)) {
+      }
+      // Array of Templates
+      else if (Array.isArray(cur)) {
         // if array is empty just return empty string
         if (cur.length === 0) {
           return {
@@ -176,7 +181,7 @@ export class Template {
                 isComponentArray = true;
                 return [Number(c.statics[0])];
               } else {
-                return Object.values(c.toTree(false));
+                return Object.values(c.toTree(componentRenderer));
               }
             });
             if (isComponentArray) {
@@ -195,15 +200,24 @@ export class Template {
             // probably added an array of objects directly
             // e.g. to the dynamic e.g. ${myArray}
             // so just render the object as a string
-            s = cur.map((c: unknown) => String(c));
+            console.warn(
+              "Unhandled types in array, rendering as string",
+              cur.map((c: unknown) => (c instanceof Object ? c.constructor.name : String(c)))
+            );
+            s = cur.map((c: unknown) => escapehtml(String(c)));
             return {
               ...acc,
               [`${index}`]: s.join(""),
             };
           }
         }
-      } else {
-        // cur is a literal string or number
+      }
+      // Something else we don't know how to render
+      else {
+        if (cur instanceof Object) {
+          console.warn("Unhandled type, rendering as string", cur.constructor.name);
+        }
+        // just call to string on it
         return {
           ...acc,
           [`${index}`]: escapehtml(String(cur)),
@@ -212,9 +226,7 @@ export class Template {
     }, {} as Tree);
 
     // appends the statics to the parts tree
-    if (includeStatics) {
-      tree["s"] = this.statics;
-    }
+    tree["s"] = this.statics;
     return tree;
   }
 
@@ -226,36 +238,47 @@ export class Template {
     // component id index
     let cidIndex = 0;
 
+    const renderComponent = (pid: number, c: Component<AnyEvent, Template>) => {
+      // if the component has an id, it is statefull, so set a cid for
+      // rendering purposes
+      if (c.id) {
+        c.cid = ++cidIndex;
+      }
+
+      // create a component context for the rendering purposes
+      const noopCtx: ComponentContext<AnyEvent> = {
+        parentId: pid.toString(),
+        connected: false,
+        dispatchEvent: (event: AnyEvent) => {
+          // no-op
+        },
+        pushEvent: (pushEvent: AnyEvent) => {
+          // no-op
+        },
+      };
+
+      // run the component mount, update, and render methods
+      c.mount(noopCtx);
+      c.update(noopCtx);
+      return c.render();
+    };
+
     return this.statics.reduce((result, s, i) => {
       const d = this.dynamics[i - 1];
 
       // handle rendering components
       if (d instanceof BaseComponent) {
-        // if the component has an id, it is statefull, so set a cid for
-        // rendering purposes
-        if (d.id) {
-          d.cid = ++cidIndex;
-        }
-
-        // create a component context for the rendering purposes
-        const noopCtx: ComponentContext<AnyEvent> = {
-          parentId: i.toString(),
-          connected: false,
-          dispatchEvent: (event: AnyEvent) => {
-            // no-op
-          },
-          pushEvent: (pushEvent: AnyEvent) => {
-            // no-op
-          },
-        };
-
-        // run the component mount, update, and render methods
-        const renderComponent = (c: Component<AnyEvent, Template>) => {
-          c.mount(noopCtx);
-          c.update(noopCtx);
-          return c.render();
-        };
-        return result + renderComponent(d) + s;
+        console.log("single component", d.constructor.name);
+        const renderedComponent = renderComponent(i, d);
+        return result + renderedComponent + s;
+      } else if (Array.isArray(d) && d.some((item) => item instanceof BaseComponent)) {
+        console.log(
+          "array of components",
+          d.map((item) => item.constructor.name)
+        );
+        const renderedComponents = d.map((item) => renderComponent(i, item));
+        // console.log(renderedComponents);
+        return result + renderedComponents.join("") + s;
       }
 
       // if not a component, just escape the dynamic value

@@ -389,7 +389,7 @@ export class WsHandler<R extends object, T> {
     tmpl = await this.maybeWrapView(tmpl);
 
     // diff the new view with the old view
-    const newParts = tmpl.toTree(true, this.#ctx!.renderComponent.bind(this.#ctx));
+    const newParts = tmpl.toTree(this.#ctx!.renderComponent.bind(this.#ctx));
     let diff = deepDiff(this.#ctx!.parts, newParts);
     // store newParts for future diffs
     this.#ctx!.parts = newParts;
@@ -405,7 +405,7 @@ export class WsHandler<R extends object, T> {
     tmpl = await this.maybeWrapView(tmpl);
 
     // step 2: store parts for later diffing after rootTemplate is applied
-    let parts = tmpl.toTree(true, this.#ctx!.renderComponent.bind(this.#ctx));
+    let parts = tmpl.toTree(this.#ctx!.renderComponent.bind(this.#ctx));
 
     // step 3: add any `Component` renderings to the parts tree
     parts = this.maybeAddComponentsToParts(parts);
@@ -462,7 +462,7 @@ export class WsHandler<R extends object, T> {
     // iterate over stateful components to find changed
     Object.values(this.#ctx!.statefulComponents).forEach((c) => {
       // TODO - diff the old tree with the new tree for these components
-      const newTree = c.render().toTree(true);
+      const newTree = c.render().toTree();
       changedParts[`${c.cid}`] = newTree;
     });
     // if any stateful component changed
