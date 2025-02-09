@@ -1,5 +1,12 @@
 import { LiveSocket } from "phoenix_live_view";
 
+// better than @types/phoenix_live_view/hooks.d.ts
+// TODO update types in DefinitelyTyped
+//https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0f3e3a0e1f0ffc33250f9ce9526533e60678bd3d/types/phoenix_live_view/hooks.d.ts
+
+export type OnReply = (reply: any, ref: number) => any;
+export type CallbackRef = (customEvent: any, bypass: boolean) => string;
+
 /**
  * ViewHookInstance defines the instance properties and methods that are available to ViewHooks at runtime
  */
@@ -20,7 +27,7 @@ interface ViewHookInstance {
    * @param payload - The payload to send with the event
    * @param callback - Optional callback that receives the reply from the server
    */
-  pushEvent: (event: string, payload: any, callback?: (reply: any, ref: string) => void) => void;
+  pushEvent: (event: string, payload: any, callback?: OnReply) => void;
 
   /**
    * Pushes targeted events from the client to `View` and `Component` instances.
@@ -30,34 +37,35 @@ interface ViewHookInstance {
    * @param payload - The payload to send with the event
    * @param callback - Optional callback that receives the reply from the server
    */
-  pushEventTo: (
-    selectorOrTarget: string | HTMLElement,
-    event: string,
-    payload: any,
-    callback?: (reply: any, ref: string) => void
-  ) => void;
+  pushEventTo: (selectorOrTarget: string | HTMLElement, event: string, payload: any, callback?: OnReply) => void;
 
   /**
    * Handles events pushed from the server `ViewContext.pushEvent` call
    * @param event - The name of the event to handle
    * @param callback - Callback function that receives the event payload
    */
-  handleEvent: (event: string, callback: (payload: any) => void) => void;
+  handleEvent: (event: string, callback: (payload: any) => void) => CallbackRef;
+
+  /**
+   * Removes handler for an event
+   * @param ref - The reference to the event handler to remove
+   */
+  removeHandleEvent: (ref: CallbackRef) => void;
 
   /**
    * Injects a list of file-like objects into an uploader
    * @param name - The name of the uploader defined by `ViewContext.allowUpload`
-   * @param files - FileList or array of Files to upload
+   * @param files - files to upload
    */
-  upload: (name: string, files: FileList | File[]) => void;
+  upload: (name: string, files: any) => void;
 
   /**
    * Injects files into an uploader targeting a specific `View` or `Component`
    * @param selectorOrTarget - Query selector string or DOM element to target
    * @param name - The name of the uploader defined by `ViewContext.allowUpload`
-   * @param files - FileList or array of Files to upload
+   * @param files - files to upload
    */
-  uploadTo: (selectorOrTarget: string | HTMLElement, name: string, files: FileList | File[]) => void;
+  uploadTo: (selectorOrTarget: any, name: string, files: any) => void;
 }
 
 /**
