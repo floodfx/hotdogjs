@@ -10,11 +10,12 @@
     "composite": true,
     "strict": true,
     "downlevelIteration": true,
-    "skipLibCheck": true,
     "jsx": "react-jsx",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
     "types": [
       "@types/bun" // add Bun global
     ]
