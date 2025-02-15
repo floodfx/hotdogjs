@@ -1,3 +1,4 @@
+import { JS } from "src/commands/jsCommands";
 import { BaseComponent, Component, type ComponentContext } from "src/component/component";
 import type { AnyEvent } from "src/view/view";
 
@@ -152,6 +153,13 @@ export class Template {
           }
         }
       }
+      // JS commands
+      else if (cur instanceof JS) {
+        return {
+          ...acc,
+          [`${index}`]: escapehtml(cur.toString()),
+        };
+      }
       // Array of Templates
       else if (Array.isArray(cur)) {
         // if array is empty just return empty string
@@ -215,7 +223,7 @@ export class Template {
       // Something else we don't know how to render
       else {
         if (cur instanceof Object) {
-          console.warn("Unhandled type, rendering as string", cur.constructor.name);
+          console.warn(`Unhandled type, rendering as string: constructor name "${cur.constructor.name}"`);
         }
         // just call to string on it
         return {
