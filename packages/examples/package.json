@@ -11,9 +11,11 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "hotdogjs": "workspace:*",
-    "@hotdogjs/form": "workspace:*",
     "@hotdogjs/client": "workspace:*",
+    "@hotdogjs/form": "workspace:*",
+    "hotdogjs": "workspace:*",
+    "js-confetti": "^0.12.0",
+    "xstate": "^5.19.2",
     "zod": "latest"
   }
 }
