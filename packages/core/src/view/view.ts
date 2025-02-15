@@ -51,6 +51,11 @@ export type MountEvent<R extends Record<string, string> = {}> = {
    * the matched route parameters
    */
   params: MatchedRoute["params"];
+
+  /**
+   * the URL of the request
+   */
+  url: URL;
 } & R;
 
 /**

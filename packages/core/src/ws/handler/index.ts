@@ -134,6 +134,7 @@ export class WsHandler<R extends object, T> {
               params: matchResult.params,
               query: matchResult.query,
               ...this.#requestData,
+              url: url,
             };
 
             await view.mount(this.#ctx!, mountParams);
