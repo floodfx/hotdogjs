@@ -1,5 +1,8 @@
 import { BaseComponent, html, type ComponentContext } from "hotdogjs";
 
+/**
+ * Toggle is a stateful toggle component that can be used to toggle a boolean value.
+ */
 export class Toggle extends BaseComponent {
   checked: boolean;
 

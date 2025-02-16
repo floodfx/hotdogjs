@@ -8,19 +8,14 @@ import { ConfettiEvents, configureConfetti } from "../../client/hooks/confetti";
 type CountdownEvent =
   | {
       type: "tick";
+      amount?: number;
+    }
+  | {
+      type: "zero" | "start" | "stop";
     }
   | {
       type: "reset";
       value: number;
-    }
-  | {
-      type: "start";
-    }
-  | {
-      type: "stop";
-    }
-  | {
-      type: "zero";
     };
 
 /**
@@ -59,12 +54,13 @@ export default class Countdown extends BaseView<CountdownEvent> {
   handleEvent(ctx: ViewContext<CountdownEvent>, event: CountdownEvent): void | Promise<void> {
     switch (event.type) {
       case "tick":
+        const decrement = event.amount ?? 1;
+        this.counter = Math.max(this.counter - decrement, 0);
         if (this.counter === 0) {
           ctx.dispatchEvent({ type: "zero" });
           this.stopFn();
           return;
         }
-        this.counter--;
         break;
       case "reset":
         this.stopFn();
@@ -89,41 +85,52 @@ export default class Countdown extends BaseView<CountdownEvent> {
   }
 
   render() {
-    return html`<div class="flex flex-col justify-center items-center h-screen gap-4 max-w-sm mx-auto">
-      <h2 class="text-2xl font-bold font-mono">Countdown</h2>
-      <p class="text-sm">When the countdown reaches zero you'll get a special confetti.</p>
-      <p class="text-sm">
-        You can adjust the start value by updating the URL path. For example,
-        <a class="link font-mono" href="/countdown/20">/countdown/20</a> will start the countdown at 20.
-      </p>
-      <p class="text-sm text-left">The longer the countdown the more confetti.</p>
-      <span
-        class="countdown text-6xl font-mono"
-        id="confetti"
-        ${safe(
-          configureConfetti({
-            emojis: ["🌭"],
-            emojiSize: 40,
-            confettiNumber: this.start * 5,
-          })
-        )}>
-        <span style="--value:${this.counter};"></span>
-      </span>
-      <div class="flex gap-4">
-        ${new Btn<CountdownEvent>({
-          label: "Start",
-          onClick: "start",
-          disabled: this.state !== "paused",
-        })}
-        ${new Btn<CountdownEvent>({
-          label: "Stop",
-          onClick: "stop",
-          disabled: this.state !== "running",
-        })}
-        ${new Btn<CountdownEvent>({
-          label: "Reset",
-          onClick: "reset",
-        })}
+    return html`<div class="flex flex-col justify-start items-center h-screen gap-4 mx-auto">
+      <div class="card bg-base-100 shadow-xl border border-gray-300">
+        <div class="card-body">
+          <h2 class="card-title">Countdown</h2>
+          <p class="text-sm">
+            When the countdown reaches zero you'll get a special confetti. The longer the countdown the more confetti.
+          </p>
+          <div class="flex mx-auto">
+            <span
+              class="countdown text-6xl font-mono"
+              id="confetti"
+              ${safe(
+                configureConfetti({
+                  emojis: ["🌭", "🍣", "🐈"],
+                  emojiSize: 40,
+                  confettiNumber: this.start * 5,
+                })
+              )}>
+              <span style="--value:${this.counter};"></span>
+            </span>
+          </div>
+          <div class="card-actions flex w-full justify-center pt-8">
+            <div class="flex gap-4">
+              ${new Btn<CountdownEvent>({
+                label: "Start ▶️",
+                onClick: "start",
+                disabled: this.state !== "paused",
+              })}
+              ${new Btn<CountdownEvent>({
+                label: "Stop ⏸️",
+                onClick: "stop",
+                disabled: this.state !== "running",
+              })}
+              ${new Btn<CountdownEvent>({
+                label: "Reset ↩️",
+                onClick: "reset",
+              })}
+              ${new Btn<CountdownEvent>({
+                label: "Ten Ticks ⏩",
+                onClick: "tick",
+                disabled: this.state !== "running",
+                clickParam: { key: "amount", value: 10 },
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>`;
   }
