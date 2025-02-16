@@ -41,7 +41,8 @@ const exampleCards = examples.map((example) => new ExampleCard(example));
 
 export default class Index extends BaseView<AnyEvent> {
   render() {
-    return html`<div class="flex justify-center">
+    return html`<div class="flex flex-col justify-center items-center gap-4 pt-10">
+      <h1 class="text-2xl font-bold">Hotdogjs Examples</h1>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         ${exampleCards.map((example) => example)}
       </div>

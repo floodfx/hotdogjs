@@ -98,7 +98,7 @@ export default class Countdown extends BaseView<CountdownEvent> {
               id="confetti"
               ${safe(
                 configureConfetti({
-                  emojis: ["🌭", "🍣", "🐈"],
+                  emojis: ["🌭"],
                   emojiSize: 40,
                   confettiNumber: this.start * 5,
                 })

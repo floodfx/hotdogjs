@@ -1,4 +1,4 @@
-import { BaseComponent, BaseView, MountEvent, ViewContext, html, type RenderMeta } from "hotdogjs";
+import { BaseComponent, BaseView, MountEvent, ViewContext, html } from "hotdogjs";
 
 type Event = { type: "refresh" };
 
@@ -6,7 +6,7 @@ type Event = { type: "refresh" };
  * Dashboard that automatically refreshes every second or when a user hits refresh.
  */
 export default class Dashboard extends BaseView<Event> {
-  newOrders: number;
+  itemsInCart: number;
   salesAmount: number;
   rating: number;
 
@@ -14,36 +14,36 @@ export default class Dashboard extends BaseView<Event> {
 
   constructor() {
     super();
-    this.newOrders = randomNewOrders();
+    this.itemsInCart = randomItemsInCart();
     this.salesAmount = randomSalesAmount();
     this.rating = randomRating();
   }
 
   mount(ctx: ViewContext<Event>, _me: MountEvent) {
-    this.newOrders = randomNewOrders();
+    this.itemsInCart = randomItemsInCart();
     this.salesAmount = randomSalesAmount();
     this.rating = randomRating();
     if (ctx.connected) {
       this.timer = setInterval(() => {
         ctx.dispatchEvent("refresh");
-      }, 2000);
+      }, 1000);
     }
   }
 
   handleEvent(ctx: ViewContext<Event>, event: Event) {
     if (event.type === "refresh") {
-      this.newOrders = randomNewOrders();
+      this.itemsInCart = randomItemsInCart();
       this.salesAmount = randomSalesAmount();
       this.rating = randomRating();
     }
   }
 
-  render(meta: RenderMeta) {
+  render() {
     return html`
       <div class="flex flex-col items-center justify-start h-screen pt-10 gap-10">
-        <h1 class="text-2xl font-bold">Sales Dashboard</h1>
-        <div class="stats shadow">
-          ${new Stat("🥡 New Orders", this.newOrders)}
+        <h1 class="text-2xl font-bold">Live Sales Dashboard</h1>
+        <div class="stats shadow-lg border border-gray-300">
+          ${new Stat("🛒 Items in Cart", this.itemsInCart)}
           ${new Stat("💰 Sales Amount", numberToCurrency(this.salesAmount))}
           ${new Stat("🌟 Rating", ratingToStars(this.rating))}
         </div>
@@ -72,8 +72,8 @@ class Stat extends BaseComponent {
   render() {
     const { title, value, desc } = this;
     return html`<div class="stat">
-      <div class="stat-title">${title}</div>
-      <div class="stat-value text-primary">${value}</div>
+      <div class="stat-title text-lg font-bold">${title}</div>
+      <div class="stat-value text-primary font-bold">${value}</div>
       ${desc ? html`<div class="stat-desc">${desc}</div>` : ""}
     </div>`;
   }
@@ -98,7 +98,7 @@ const random = (min: number, max: number): (() => number) => {
 };
 
 const randomSalesAmount = random(100, 1000);
-const randomNewOrders = random(5, 20);
+const randomItemsInCart = random(2, 20);
 const randomRating = random(1, 5);
 
 export function numberToCurrency(amount: number) {

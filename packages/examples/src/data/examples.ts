@@ -37,6 +37,13 @@ export const examples: Example[] = [
     path: "/toppings",
     tags: ["basic", "keyboard"],
   },
+  {
+    title: "Dashboard",
+    description: "A dashboard that updates every second",
+    imageUrl: "/static/images/dashboard_teaser.png",
+    path: "/dashboard",
+    tags: ["basic", "timer"],
+  },
 ];
 
 export const examplesByCategory = examples.reduce((acc, example) => {
