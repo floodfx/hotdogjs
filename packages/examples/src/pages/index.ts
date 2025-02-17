@@ -17,15 +17,15 @@ class ExampleCard extends BaseComponent<AnyEvent> {
   }
 
   render() {
-    return html`<a href="${this.path}">
-      <div class="card bg-base-100 w-96 shadow-xl border border-gray-200">
+    return html`<a class="flex flex-col" href="${this.path}">
+      <div class="card bg-base-100 shadow-xl border border-gray-200 flex-grow">
         <figure class="px-10 pt-10 h-48 flex items-center justify-center">
           <img
             src="${this.imageUrl}"
             alt="${this.title}"
             class="rounded-xl border border-primary w-full h-full object-contain" />
         </figure>
-        <div class="card-body items-center text-center">
+        <div class="card-body items-center text-center ">
           <h2 class="card-title">${this.title}</h2>
           <div class="flex flex-wrap gap-2">
             ${this.tags.map((tag) => html`<div class="badge badge-sm badge-outline font-mono">${tag}</div>`)}

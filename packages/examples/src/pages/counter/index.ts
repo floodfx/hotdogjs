@@ -29,7 +29,7 @@ export default class Counter extends BaseView<CounterEvent> {
 
   render() {
     return html`
-      <div class="flex flex-col justify-center items-center gap-4 mx-auto">
+      <div class="flex flex-col justify-center items-center gap-4 mx-auto pt-8">
         <div class="card bg-base-100 shadow-xl border border-gray-300">
           <div class="card-body">
             <h2 class="card-title">Counter</h2>

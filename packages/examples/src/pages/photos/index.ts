@@ -108,7 +108,7 @@ export default class Photos extends BaseView<PhotosEvents> {
           {
             id: "photo-form",
             change: "validate",
-            submit: "save",
+            onSubmit: "save",
             csrfToken: meta.csrfToken,
           },
           html`

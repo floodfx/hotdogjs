@@ -5,6 +5,7 @@ export type Example = {
   path: string;
   tags: string[];
   category?: string;
+  sourceLink?: string;
 };
 
 export const examples: Example[] = [
@@ -43,6 +44,13 @@ export const examples: Example[] = [
     imageUrl: "/static/images/dashboard_teaser.png",
     path: "/dashboard",
     tags: ["basic", "timer"],
+  },
+  {
+    title: "Form",
+    description: "A form with validation and success modal",
+    imageUrl: "/static/images/form_validation_teaser.png",
+    path: "/form",
+    tags: ["basic", "form", "modal"],
   },
 ];
 
