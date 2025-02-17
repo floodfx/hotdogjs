@@ -3,7 +3,8 @@
 
   // Other configuration options...
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "lib": ["ESNext"]
   },
   "include": ["./src/**/*.ts"]
 }
