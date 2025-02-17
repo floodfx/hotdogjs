@@ -13,6 +13,7 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "topbar";
 import { Confetti } from "./hooks/confetti";
+import { Modal } from "./hooks/modal";
 
 // Read Configuration from the meta tags in the HTML
 let csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
@@ -31,13 +32,25 @@ let liveSocket = new LiveSocket(url, Socket, {
   // add S3 uploader
   uploaders: { S3 },
   // add hooks
-  hooks: { Confetti },
+  hooks: { Confetti, Modal },
 });
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: barColor }, shadowColor: shadowColor });
 window.addEventListener("phx:page-loading-start", () => topbar.show());
 window.addEventListener("phx:page-loading-stop", () => topbar.hide());
+
+// add event listener for generic js-exec events from server
+// this works by adding a data attribute to the element with the js to execute
+// and then triggering a custom event with the selector to find the element
+// see: https://fly.io/phoenix-files/server-triggered-js/
+window.addEventListener("phx:js-exec", (e: Event) => {
+  console.log("phx:js-exec", e);
+  const detail = (e as CustomEvent).detail;
+  document.querySelectorAll(detail.to).forEach((el) => {
+    liveSocket.execJS(el, el.getAttribute(detail.attr));
+  });
+});
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();
