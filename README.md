@@ -13,6 +13,8 @@ Hotdogjs's key features are:
  * Hot-reloading based development with no compilation
  * Enabling devs to have fun and be productive
 
+Github repo: [https://github.com/floodfx/hotdogjs](https://github.com/floodfx/hotdogjs)
+
 ## How does Hotdogjs work?
 At a high level, LiveViews automatically detect registered events (clicks, form updates, etc.) and routes these events (and metadata) from client to server over a websocket.  When the server receives an event, it routes it to a developer defined handler which can update the server state and kicks off a re-render.  The server then calculates a view diff and sends this diff back to the client which is automatically applied to the DOM.
 
@@ -35,7 +37,12 @@ bun dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Anatomy of a Hotdogjs project
+## Run the Examples
+ * Clone the Hotdogjs repo - `git clone https://github.com/floodfx/hotdogjs`
+ * Install dependencies - `cd hotdogjs && bun install`
+ * Run the examples - `cd packages/examples && bun dev`
+
+## Anatomy of a Hotdogjs project
  * `public/` - Location of static assets like client-side javascript
  * `views/` - Hotdogjs LiveViews routed based on [File System Router](https://bun.sh/docs/api/file-system-router); all `.ts` files in this directory are expected to be LiveViews
  * `layouts/` - Template for laying out the Views
