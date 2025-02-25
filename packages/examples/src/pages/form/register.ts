@@ -27,12 +27,9 @@ type Registration = z.infer<typeof RegistrationSchema>;
  * RegistrationEvents for the registration form.
  */
 type RegistrationEvents =
-  | ({
-      type: "save";
-    } & Registration)
-  | ({
-      type: "validate";
-    } & Registration);
+  | {
+      type: "save" | "validate";
+    } & Registration;
 
 /**
  * Register shows how easy it is to get a working form with validation.

@@ -1,5 +1,4 @@
 import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
-import { Btn } from "../../components/button";
 
 export type CounterEvent = { type: "inc" | "dec" };
 
@@ -18,6 +17,7 @@ export default class Counter extends BaseView<CounterEvent> {
   }
 
   handleEvent(ctx: ViewContext<CounterEvent>, event: CounterEvent) {
+    if (event.type === "inc") this.count++;
     switch (event.type) {
       case "inc":
         this.count++;
@@ -36,7 +36,8 @@ export default class Counter extends BaseView<CounterEvent> {
             <p>Click the buttons to adjust the count.</p>
             <h3 class="text-4xl font-bold">${this.count}</h3>
             <div class="card-actions">
-              ${new Btn<Event>({ label: "-", onClick: "dec" })} ${new Btn<Event>({ label: "+", onClick: "inc" })}
+              <button class="btn btn-primary" hd-click="dec">-</button>
+              <button class="btn btn-primary" hd-click="inc">+</button>
             </div>
           </div>
         </div>

@@ -70,15 +70,15 @@ export default class ListView extends BaseView<ListEvent> {
                   <div class="flex flex-col gap-2 justify-center">
                     <div class="flex items-center gap-1">
                       <kbd hd-window-keydown="key_update" hd-key="j" class="kbd">j</kbd>
-                      <span class="text-sm">=&nbsp;down</span>
+                      <span class="text-sm">= down</span>
                     </div>
                     <div class="flex items-center gap-1">
                       <kbd hd-window-keydown="key_update" hd-key="k" class="kbd">k</kbd>
-                      <span class="text-sm">=&nbsp;up</span>
+                      <span class="text-sm">= up</span>
                     </div>
                     <div class="flex items-center gap-1">
                       <kbd hd-window-keydown="key_update" hd-key="x" class="kbd">x</kbd>
-                      <span class="text-sm">=&nbsp;toggle&nbsp;selection</span>
+                      <span class="text-sm">= toggle selection</span>
                     </div>
                   </div>
                 </div>

@@ -52,7 +52,7 @@ export default class Dashboard extends BaseView<Event> {
     `;
   }
 
-  shutdown(): void {
+  shutdown() {
     clearInterval(this.timer);
   }
 }

@@ -8,49 +8,57 @@ import {
   html,
   live_file_input,
   live_img_preview,
+  type UploadConfigOptions,
 } from "hotdogjs";
 import PhotoDB, { PhotoSchema, type Photo } from "../../db/photo_db";
 
-type PhotosEvents =
-  | ({ type: "validate" } & Partial<Photo>)
-  | ({ type: "save" } & Partial<Photo>)
+export type PhotosEvents =
+  | ({ type: "validate" | "save" } & Partial<Photo>)
   | { type: "toggle-favorite"; id: string }
   | { type: "cancel"; config_name: string; ref: string }
   | { type: "photo-change" };
 
+export const defaultPhotosConfigOptions: UploadConfigOptions = {
+  accept: [".png", ".jpg", ".jpeg", ".gif"], // only allow images
+  max_entries: 3, // only 3 entries per upload
+  max_file_size: 5 * 1024 * 1024, // 5MB
+};
+
 export default class Photos extends BaseView<PhotosEvents> {
-  _csrfToken: string = "";
   photos: Photo[] = [];
   form: Form<Photo> = new ZodForm(PhotoSchema);
+  uploadConfigId: string = "photos";
+  uploadConfigOptions: UploadConfigOptions = defaultPhotosConfigOptions;
+
+  constructor(options: { uploadConfigOptions?: UploadConfigOptions } = {}) {
+    super();
+    this.uploadConfigOptions = options.uploadConfigOptions ?? defaultPhotosConfigOptions;
+  }
 
   mount(ctx: ViewContext<PhotosEvents>, e: MountEvent): void | Promise<void> {
     if (ctx.connected) {
       ctx.subscribe("photo-change");
     }
     this.photos = PhotoDB.all();
-    this._csrfToken = e._csrf_token;
     // configure the upload constraints
-    ctx.allowUpload("photos", {
-      accept: [".png", ".jpg", ".jpeg", ".gif"], // only allow images
-      max_entries: 3, // only 3 entries per upload
-      max_file_size: 5 * 1024 * 1024, // 5MB
-    });
+    ctx.allowUpload(this.uploadConfigId, this.uploadConfigOptions);
   }
 
-  handleEvent(ctx: ViewContext<PhotosEvents>, event: PhotosEvents): void | Promise<void> {
+  handleEvent(ctx: ViewContext<PhotosEvents>, event: PhotosEvents) {
     switch (event.type) {
       case "validate": {
         this.form.update(event, event.type);
         break;
       }
       case "save": {
-        // first get the completed file uploads and map them to urls
-        // Note: the files are guaranteed to be completed here because
-        // save is the event called after all the uploads are complete
-        const { completed } = ctx.uploadedEntries("photos");
+        // get the completed file uploads
+        const { completed } = ctx.uploadedEntries(this.uploadConfigId);
 
-        // save the photos
-        completed.forEach((entry: UploadEntry) => {
+        // (optional) preprocess the image, validate it, create a thumbnail, etc.
+        completed.forEach((entry: UploadEntry) => {});
+
+        // consume (i.e. remove) the uploaded entries from the "photos" upload config
+        ctx.consumeUploadedEntries(this.uploadConfigId, async (path, entry) => {
           const photo = PhotoDB.insert({
             id: entry.uuid,
             external: false,
@@ -62,33 +70,18 @@ export default class Photos extends BaseView<PhotosEvents> {
             this.photos = [...this.photos, photo];
           }
         });
-
-        // Yay! We've successfully saved the photo, so we can consume (i.e. "remove")
-        // the uploaded entries from the "photos" upload config
-        ctx.consumeUploadedEntries("photos", async (path, entry) => {
-          // we could create thumbnails, scan for viruses, etc.
-          // but for now move the data from the temp file (meta.path) to a public directory
-          // e.g. createThumbail(entry);
-        });
-        // update the context with new photos and clear the form
         this.form.reset();
+        ctx.publish("photo-change");
         break;
       }
       case "cancel": {
-        ctx.cancelUpload("photos", event.ref);
+        ctx.cancelUpload(this.uploadConfigId, event.ref);
         break;
       }
       case "toggle-favorite": {
-        const photo = PhotoDB.update(event.id);
-        if (photo) {
-          this.photos = this.photos.map((p) => {
-            if (p.id === photo.id) {
-              return photo;
-            }
-            return p;
-          });
-          ctx.publish("photo-change");
-        }
+        PhotoDB.update(event.id);
+        this.photos = PhotoDB.all();
+        ctx.publish("photo-change");
         break;
       }
       case "photo-change":
@@ -99,15 +92,16 @@ export default class Photos extends BaseView<PhotosEvents> {
 
   render(meta: RenderMeta) {
     const { uploads } = meta;
+    const uploadconfig = uploads[this.uploadConfigId];
     return html`
       <div class="flex flex-col items-center">
-        <h2 class="text-2xl font-bold">My Photo Groups</h2>
+        <h2 class="text-2xl font-bold">Photo Gallery</h2>
 
         <!-- Render the form -->
         ${form(
           {
             id: "photo-form",
-            change: "validate",
+            onChange: "validate",
             onSubmit: "save",
             csrfToken: meta.csrfToken,
           },
@@ -115,75 +109,110 @@ export default class Photos extends BaseView<PhotosEvents> {
             <div class="flex flex-col items-center">
               <!-- file input / drag and drop -->
               <div
-                hd-drop-target="${uploads.photos.ref}"
-                style="border: 2px dashed #ccc; padding: 10px; margin: 10px 0;">
-                ${live_file_input(uploads.photos, "file-input file-input-bordered w-full max-w-xs")} or drag and drop
+                hd-drop-target="${uploadconfig.ref}"
+                class="flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg p-10 m-4">
+                ${live_file_input(uploadconfig, "file-input file-input-bordered w-full max-w-xs")} or drag and drop
                 files here
               </div>
-              <!-- help text -->
-              <div class="text-sm text-gray-500" style="font-size: 10px; padding-bottom: 3rem">
-                Add up to ${uploads.photos.max_entries} photos (max ${uploads.photos.max_file_size / (1024 * 1024)} MB
-                each)
+              <div class="text-sm text-gray-500 text-xs pb-3">
+                Add up to ${uploadconfig.max_entries} photos (max ${uploadconfig.max_file_size / (1024 * 1024)} MB each)
               </div>
             </div>
 
             <!-- any errors from the upload -->
-            ${uploads.photos.errors.map((error: string) => html`<p class="invalid-feedback">${error}</p>`)}
+            ${uploadconfig.errors.length > 0
+              ? html`
+                  <div class="flex flex-col items-center justify-center">
+                    <h3 class="text-red-500 text-sm mt-2">Please fix the errors below before uploading</h3>
+                    ${uploadconfig.errors.map((error) => html`<p class="text-red-500 text-sm mt-2">${error}</p>`)}
+                  </div>
+                `
+              : ""}
 
             <!-- render the preview, progress, and cancel button of the selected files -->
-            ${uploads.photos.entries.map(renderEntry)}
+            ${uploadconfig.entries.map(previewUpload)}
 
             <!-- submit button -->
-            ${submit("Upload", {
-              classes: "btn btn-primary",
-              phx_disable_with: "Saving...",
-              disabled: uploads.photos.errors.length > 0,
-            })}
+            <div class="flex justify-center">
+              ${submit("Upload", {
+                classes: "btn btn-primary btn-wide",
+                disable_with: "Saving...",
+                disabled: uploadconfig.errors.length > 0 || uploadconfig.entries.length === 0,
+              })}
+            </div>
           `
         )}
 
-        <!-- render the photos  -->
-        <ul id="photo_groups_list" hd-update="prepend">
-          ${this.photos.map(renderPhoto)}
-        </ul>
+        <!-- photo grid -->
+        <div class="flex justify-center">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl p-4">
+            ${this.photos.map(renderPhoto)}
+          </div>
+        </div>
       </div>
     `;
   }
 }
 
 // Render a preview of the uploaded file with progress bar and cancel button
-function renderEntry(entry: UploadEntry) {
+function previewUpload(entry: UploadEntry) {
   return html`
-    <div class="flex items-center" style="display: flex; align-items: center;">
-      <div style="width: 250px; margin: 2rem 0;">${live_img_preview(entry)}</div>
-      <div style="display: flex; align-items: center; margin-left: 2rem;">
-        <progress
-          style="position: relative; top: 8px; width: 150px; height: 1em;"
-          value="${entry.progress}"
-          max="100"></progress>
-        <span style="margin-left: 1rem;">${entry.progress}%</span>
+    <div
+      id="${entry.ref}"
+      class="flex flex-col md:flex-row items-center bg-gray-50 rounded-lg p-4 mb-4 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div
+        class="w-full md:w-64 h-48 overflow-hidden rounded-lg shadow-inner bg-gray-200 flex items-center justify-center">
+        ${live_img_preview(entry)}
       </div>
-      <div style="display: flex; align-items: center;">
-        <a style="padding-left: 2rem;" hd-click="cancel" hd-value-ref="${entry.ref}">🗑</a>
-        ${entry.errors?.map((error) => html`<p style="padding-left: 1rem;" class="invalid-feedback">${error}</p>`)}
+      <div class="flex-1 px-4 py-2 w-full">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-medium text-gray-700 truncate max-w-xs">${entry.name}</span>
+          <span class="text-sm text-gray-500">${(entry.size / 1024).toFixed(1)} KB</span>
+        </div>
+        <div class="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            class="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-300"
+            style="width: ${entry.progress}%"></div>
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-sm text-gray-600">${entry.progress}% complete</span>
+          <button
+            type="button"
+            class="text-red-500 hover:text-red-700 transition-colors duration-200 focus:outline-none"
+            hd-click="cancel"
+            hd-value-ref="${entry.ref}"
+            hd-value-config_name="photos"
+            title="Cancel upload">
+            <i class="ph ph-trash"></i>
+          </button>
+        </div>
+        ${entry.errors?.map((error) => html`<p class="text-red-500 text-sm mt-2">${error}</p>`)}
       </div>
     </div>
   `;
 }
 
-// Render a photo group with a list of photos
+// Render a photo with adaptive sizing based on orientation
 function renderPhoto(photo: Photo) {
   const url = photo.external ? photo.url : `data:${photo.mime};base64,${Buffer.from(photo.data!).toString("base64")}`;
-  return html`<li id="${photo.id}">
-    <div class="relative flex">
-      <img class="object-cover h-48 w-96" src="${url}" />
-      <button
-        class="absolute bottom-2 left-2"
-        hd-click="toggle-favorite"
-        hd-value-id="${photo.id}"
-        hd-disable-with="Updating...">
-        ${photo.favorite ? "❤️" : "🤍"}
-      </button>
+  return html`
+    <div id="${photo.id}" class="mb-4 break-inside-avoid">
+      <div class="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+        <img
+          class="w-full h-auto object-cover"
+          src="${url}"
+          loading="lazy"
+          onload="this.parentElement.classList.add(this.naturalHeight > this.naturalWidth ? 'portrait' : 'landscape')" />
+        <div
+          class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity duration-300"></div>
+        <button
+          class="absolute bottom-2 left-2 transition-opacity opacity-90 hover:opacity-100"
+          hd-click="toggle-favorite"
+          hd-value-id="${photo.id}"
+          hd-disable-with="Updating...">
+          ${photo.favorite ? "❤️" : "🤍"}
+        </button>
+      </div>
     </div>
-  </li>`;
+  `;
 }
