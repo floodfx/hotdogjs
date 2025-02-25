@@ -31,6 +31,10 @@ type ClassOptions = {
    * e.g. ["ease-out duration-300", "opacity-0", "opacity-100"]
    */
   transition?: Transition;
+  /**
+   * Whether to block the command until the transition is complete. Defaults to `true`.
+   */
+  blocking?: boolean;
 };
 
 interface ClassCmdBody {
@@ -38,10 +42,12 @@ interface ClassCmdBody {
   time: number;
   to: string | null;
   transition: TransitionBodyCmd;
+  blocking: boolean;
 }
 
 type AddClassCmd = ["add_class", ClassCmdBody];
 type RemoveClassCmd = ["remove_class", ClassCmdBody];
+type ToggleClassCmd = ["toggle_class", ClassCmdBody];
 
 /* ---- Show / Hide ---- */
 /**
@@ -169,9 +175,15 @@ interface RemoveAttributeCmdBody {
   to: string | null;
 }
 
-type SetAttributeCmd = ["set_attr", SetAttributeCmdBody];
+interface ToggleAttributeCmdBody {
+  attr: string;
+  value: string | [string, string];
+  to: string | null;
+}
 
+type SetAttributeCmd = ["set_attr", SetAttributeCmdBody];
 type RemoveAttributeCmd = ["remove_attr", RemoveAttributeCmdBody];
+type ToggleAttributeCmd = ["toggle_attr", ToggleAttributeCmdBody];
 
 /* ---- Transition ---- */
 
@@ -259,18 +271,88 @@ interface PushCmdBody {
 
 type PushCmd = ["push", PushCmdBody];
 
+/* ---- Exec ---- */
+/**
+ * Options for the "exec" command
+ */
+
+type ExecOptions = {
+  /**
+   * The attribute name where the commands are located
+   */
+  attr: string;
+  /**
+   * The optional DOM selector element to execute the commands from (defaults to current element).
+   */
+  to?: string;
+};
+
+interface ExecCmdBody {
+  attr: string;
+  to: string | null;
+}
+
+type ExecCmd = ["exec", ExecCmdBody];
+
+/* ---- Focus ---- */
+type FocusOptions = {
+  /**
+   * The optional DOM selector element to focus (defaults to current element).
+   */
+  to?: string;
+};
+
+type FocusFirstOptions = FocusOptions;
+type PushFocusOptions = FocusOptions;
+
+interface FocusCmdBody {
+  to: string | null;
+}
+
+type FocusCmd = ["focus", FocusCmdBody];
+type FocusFirstCmd = ["focus_first", FocusCmdBody];
+type PopFocusCmd = ["pop_focus", {}];
+type PushFocusCmd = ["push_focus", FocusCmdBody];
+
+/* ---- Navigate ---- */
+type NavigateOptions = {
+  /**
+   * Whether to replace the current history entry with the new URL.
+   */
+  replace?: boolean;
+};
+
+type PatchOptions = NavigateOptions;
+
+interface NavigateCmdBody {
+  href: string;
+  replace?: boolean;
+}
+
+type NavigateCmd = ["navigate", NavigateCmdBody];
+type PatchCmd = ["patch", NavigateCmdBody];
+
 /* ---- Cmd Union ---- */
 type Cmd =
   | AddClassCmd
   | RemoveClassCmd
+  | ToggleClassCmd
   | ShowCmd
   | HideCmd
   | ToggleCmd
   | SetAttributeCmd
   | RemoveAttributeCmd
+  | ToggleAttributeCmd
   | TransitionCmd
   | DispatchCmd
-  | PushCmd;
+  | PushCmd
+  | ExecCmd
+  | FocusCmd
+  | FocusFirstCmd
+  | PopFocusCmd
+  | PushFocusCmd
+  | NavigateCmd
+  | PatchCmd;
 
 /**
  * The JS Commands API allows you to perform a small set of powerful
@@ -286,7 +368,131 @@ export class JS {
   private cmds: Cmd[] = [];
 
   /**
-   * Adds the css class(es) to the target element
+   * patch patches the given URL
+   * @param href the URL to patch
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  patch(href: string, options?: PatchOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "patch",
+        {
+          href,
+          replace: options?.replace ?? false,
+        },
+      ] satisfies PatchCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * navigate navigates to the given URL
+   * @param href the URL to navigate to
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  navigate(href: string, options?: NavigateOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "navigate",
+        {
+          href,
+          replace: options?.replace ?? false,
+        },
+      ] satisfies NavigateCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * focus focuses the target selector or current element
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  focus(options?: FocusOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "focus",
+        {
+          to: options?.to ?? null,
+        },
+      ] satisfies FocusCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * focus_first focuses the first focusable child in the target selector or current element
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  focus_first(options?: FocusFirstOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "focus_first",
+        {
+          to: options?.to ?? null,
+        },
+      ] satisfies FocusFirstCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * pop_focus pops the last focused element from the focus stack
+   * @returns this instance for further chaining
+   */
+  pop_focus() {
+    this.cmds = [...this.cmds, ["pop_focus", {}] satisfies PopFocusCmd];
+    return this;
+  }
+
+  /**
+   * push_focus pushes the given element to the focus stack
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  push_focus(options?: PushFocusOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "push_focus",
+        {
+          to: options?.to ?? null,
+        },
+      ] satisfies PushFocusCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * exec executes the commands located in an element's attribute
+   *
+   * @param attr the attribute name where the commands are located
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  exec(attr: string, options?: ExecOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "exec",
+        {
+          attr,
+          to: options?.to ?? null,
+        },
+      ] satisfies ExecCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * add_class adds the css class(es) to the target element
    * @param names the css class(es) to add (space delimited)
    * @param options the options for the command
    * @returns this instance for further chaining
@@ -301,14 +507,15 @@ export class JS {
           time: options?.time ?? 200,
           names: names.split(/\s+/),
           transition: transitionOptionsToCmd(options?.transition),
+          blocking: options?.blocking ?? true,
         },
-      ] as AddClassCmd,
+      ] satisfies AddClassCmd,
     ];
     return this;
   }
 
   /**
-   * Removes the css class(es) from the target element
+   * remove_class removes the css class(es) from the target element
    * @param names the css class(es) to remove (space delimited)
    * @param options the options for the command
    * @returns this instance for further chaining
@@ -323,14 +530,38 @@ export class JS {
           time: options?.time ?? 200,
           names: names.split(/\s+/),
           transition: transitionOptionsToCmd(options?.transition),
+          blocking: options?.blocking ?? true,
         },
-      ] as RemoveClassCmd,
+      ] satisfies RemoveClassCmd,
     ];
     return this;
   }
 
   /**
-   * Shows the target element
+   * toggle_class adds or removes classes from the target element based on presence of the class
+   * @param names the css class(es) to toggle (space delimited)
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  toggle_class(names: string, options?: ClassOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "toggle_class",
+        {
+          to: options?.to ?? null,
+          time: options?.time ?? 200,
+          names: names.split(/\s+/),
+          transition: transitionOptionsToCmd(options?.transition),
+          blocking: options?.blocking ?? true,
+        },
+      ] satisfies ToggleClassCmd,
+    ];
+    return this;
+  }
+
+  /**
+   * show shows the target element
    * @param options the options for the command
    * @returns this instance for further chaining
    */
@@ -345,13 +576,13 @@ export class JS {
           transition: transitionOptionsToCmd(options?.transition),
           display: options?.display ?? null,
         },
-      ] as ShowCmd,
+      ] satisfies ShowCmd,
     ];
     return this;
   }
 
   /**
-   * Hides the target element
+   * hide hides the target element
    * @param options the options for the command
    * @returns this instance for further chaining
    */
@@ -365,13 +596,13 @@ export class JS {
           time: options?.time ?? 200,
           transition: transitionOptionsToCmd(options?.transition),
         },
-      ] as HideCmd,
+      ] satisfies HideCmd,
     ];
     return this;
   }
 
   /**
-   * Toggles the visibility of the target element
+   * toggle toggles the visibility of the target element
    * @param options the options for the command
    * @returns this instance for further chaining
    */
@@ -387,13 +618,13 @@ export class JS {
           outs: transitionOptionsToCmd(options?.out),
           display: options?.display ?? null,
         },
-      ] as ToggleCmd,
+      ] satisfies ToggleCmd,
     ];
     return this;
   }
 
   /**
-   * Sets the given attribute on the target element
+   * set_attribute sets the given attribute on the target element
    * @param attr the 2-tuple of the attribute name and value to set
    * @param options the options for the command
    * @returns this instance for further chaining
@@ -407,13 +638,13 @@ export class JS {
           to: options?.to ?? null,
           attr,
         },
-      ] as SetAttributeCmd,
+      ] satisfies SetAttributeCmd,
     ];
     return this;
   }
 
   /**
-   * Removes the given attribute from the target element
+   * remove_attribute removes the given attribute from the target element
    * @param attr the attribute name to remove
    * @param options the options for the command
    * @returns this instance for further chaining
@@ -427,13 +658,34 @@ export class JS {
           to: options?.to ?? null,
           attr,
         },
-      ] as RemoveAttributeCmd,
+      ] satisfies RemoveAttributeCmd,
     ];
     return this;
   }
 
   /**
-   * Applies the given transition to the target element
+   * toggle_attribute sets or removes the given attribute on the target element
+   * @param attr the attribute name to set or remove
+   * @param value the value to set or remove from the attribute, or a 2-tuple of the value to toggle between
+   * @param options the options for the command
+   * @returns this instance for further chaining
+   */
+  toggle_attribute(attr: string, value: string | [string, string], options?: AttributeOptions) {
+    this.cmds = [
+      ...this.cmds,
+      [
+        "toggle_attr",
+        {
+          to: options?.to ?? null,
+          attr,
+          ...(typeof value === "string" ? { value } : { value: [value[0], value[1]] }),
+        },
+      ] satisfies ToggleAttributeCmd,
+    ];
+  }
+
+  /**
+   * transition applies the given transition to the target element
    * @param transition the transition to apply
    * @param options the options for the command
    * @returns this instance for further chaining
@@ -448,13 +700,13 @@ export class JS {
           time: options?.time ?? 200,
           transition: transitionOptionsToCmd(transition),
         },
-      ] as TransitionCmd,
+      ] satisfies TransitionCmd,
     ];
     return this;
   }
 
   /**
-   * Dispatches an event from the target element to the DOM.
+   * dispatch dispatches an event from the target element to the DOM.
    *
    * Note: All events dispatched are of a type CustomEvent, with the exception of "click".
    * For a "click", a MouseEvent is dispatched to properly simulate a UI click.
@@ -475,15 +727,15 @@ export class JS {
           to: options?.to ?? null,
           event,
           detail: options?.detail,
-          bubbles: options?.bubbles,
+          bubbles: options?.bubbles ?? true,
         },
-      ] as DispatchCmd,
+      ] satisfies DispatchCmd,
     ];
     return this;
   }
 
   /**
-   * Pushes the given event to the server
+   * push pushes the given event to the server
    * @param event the event to push
    * @param options the options for the command
    * @returns this instance for further chaining
@@ -497,7 +749,7 @@ export class JS {
           event,
           ...options,
         },
-      ] as PushCmd,
+      ] satisfies PushCmd,
     ];
     return this;
   }

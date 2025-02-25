@@ -1,20 +1,23 @@
 import { BaseView, MountEvent, ViewContext, html } from "hotdogjs";
-import { Btn } from "src/components/button";
 
-type Event = { type: "inc" } | { type: "dec" };
+export type CounterEvent = { type: "inc" | "dec" };
 
-export default class Counter extends BaseView<Event> {
+/**
+ * Counter is a simple counter view that increments and decrements a count based on button clicks.
+ */
+export default class Counter extends BaseView<CounterEvent> {
   count: number = 0;
   layoutName = "nav.html";
 
-  mount(ctx: ViewContext<Event>, e: MountEvent) {
+  mount(ctx: ViewContext<CounterEvent>, e: MountEvent) {
     this.count = parseInt(e.params.count) || 0;
     if (this.count > 99) {
       ctx.pushRedirect("/counter/99");
     }
   }
 
-  handleEvent(ctx: ViewContext<Event>, event: Event) {
+  handleEvent(ctx: ViewContext<CounterEvent>, event: CounterEvent) {
+    if (event.type === "inc") this.count++;
     switch (event.type) {
       case "inc":
         this.count++;
@@ -26,13 +29,16 @@ export default class Counter extends BaseView<Event> {
 
   render() {
     return html`
-      <div class="stats shadow-lg border-2 border-primary m-4">
-        <div class="stat">
-          <div class="stat-title">Count</div>
-          <div class="stat-value">${this.count}</div>
-          <div class="stat-desc">click the buttons to adjust</div>
-          <div class="stat-actions">
-            ${new Btn<Event>({ label: "-", onClick: "dec" })} ${new Btn<Event>({ label: "+", onClick: "inc" })}
+      <div class="flex flex-col justify-center items-center gap-4 mx-auto pt-8">
+        <div class="card bg-base-100 shadow-xl border border-gray-300">
+          <div class="card-body">
+            <h2 class="card-title">Counter</h2>
+            <p>Click the buttons to adjust the count.</p>
+            <h3 class="text-4xl font-bold">${this.count}</h3>
+            <div class="card-actions">
+              <button class="btn btn-primary" hd-click="dec">-</button>
+              <button class="btn btn-primary" hd-click="inc">+</button>
+            </div>
           </div>
         </div>
       </div>

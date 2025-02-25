@@ -62,8 +62,8 @@ export default class Books extends BaseView<Events> {
       <div id="bookForm">
         ${form(
           {
-            submit: "save",
-            change: "validate",
+            onSubmit: "save",
+            onChange: "validate",
             csrfToken: meta.csrfToken,
           },
           html`

@@ -175,7 +175,7 @@ build/
 .rollup.cache/
 
 # ignore compiled public files
-public/
+public/js/*.js
 
 .DS_Store
 

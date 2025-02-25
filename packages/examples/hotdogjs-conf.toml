@@ -1,3 +1,4 @@
 # override default configuration settings of hotdogjs
 viewsDir = "src/pages"
 layoutsDir = "src/layouts"
+clientJSSourceFile = "src/client/hotdogjs-client.ts"

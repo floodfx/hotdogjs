@@ -222,6 +222,7 @@ export class Server {
       query: matchedRoute.query,
       params: matchedRoute.params,
       ...requestData,
+      url: url,
     };
     // HTTP Lifecycle is: mount => handleParams => render
     await view.mount(ctx, mountParams);

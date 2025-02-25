@@ -19,7 +19,7 @@ class PhotoDB {
   private updateStmt: Statement<Photo, string[]>;
   private allStmt: Statement<Photo, never[]>;
   constructor() {
-    this.db = new Database("photos.dev.sqlite");
+    this.db = new Database(":memory:");
     this.db.exec("PRAGMA journal_mode = WAL;");
     this.db.exec(`
       CREATE TABLE if not exists photos (

@@ -5,7 +5,8 @@
   "description": "Hot-reloading, multi-player, single-file LiveViews at the speed of Bun",
   "exports": {
     ".": "./src/client/hotdogjs-client.ts",
-    "./s3uploader": "./src/client/s3uploader.ts"
+    "./s3uploader": "./src/client/s3uploader.ts",
+    "./hook": "./src/client/hooks/hook.ts"
   },
   "dependencies": {
     "topbar": "^3.0.0",

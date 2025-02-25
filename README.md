@@ -2,16 +2,16 @@
 
 What goes well with [Bun](https://bun.sh)? Hotdogs! 🌭🌭🌭
 
-Hotdogjs is a LiveView web framework built specifically for [Bun](https://bun.sh).
+Hotdogjs is a LiveView web framework optimized to run on [Bun](https://bun.sh).
 
 Hotdogjs's key features are:
- * Super-fast http and websocket communication (thanks to Bun)
+ * Super-fast http and websocket networking
  * Real-time, multi-player out of the box
  * Built-in ergonomics for form validation, file uploads with progress
  * Server-side state management with automatic client-side updates
- * Automatic, performant, diff-based communication protocol
- * LiveView per file with file-based routing
- * Hot reloading based development with no compilation
+ * Pressure tested, automatic, and performant diff-based communication protocol
+ * Hot-reloading based development with no compilation
+ * Enabling devs to have fun and be productive
 
 ## How does Hotdogjs work?
 At a high level, LiveViews automatically detect registered events (clicks, form updates, etc.) and routes these events (and metadata) from client to server over a websocket.  When the server receives an event, it routes it to a developer defined handler which can update the server state and kicks off a re-render.  The server then calculates a view diff and sends this diff back to the client which is automatically applied to the DOM.
@@ -21,11 +21,11 @@ All of the complicated stuff (communication protocol, websocket lifecycle, state
 ## What type of projects is Hotdogjs best for?
  * Applications with user input like forms, AI-chat, etc
  * Applications that benefit from real-time updates
- * Applications where multiple users collaborate on the same data
- * Applications with file uploads
+ * Applications where multiple users collaborate, take turns, etc
 
 ## What type of projects is Hotdogjs NOT best for?
- * Static sites
+ * Static sites (duh!)
+
 
 ## Quick Start
 ```bash
@@ -57,6 +57,63 @@ A `View` is a web page that responds to events, updates its state, and generates
  * `shutdown` is called when the `View` is being shutdown / unmounted.  This method is useful for cleaning up any resources that the `View` may have allocated.
  * `layoutName` is an optional property that can be used to specify the layout to use for the `View`.  If not specified, the `View` will use the `default.html` layout in the `layouts/` directory.
 
+### Counter View Example
+There are many more examples in the `packages/examples` directory but just to get a feel for LiveViews, here is a simple counter example:
+
+```ts
+export default class Increment extends BaseView<AnyEvent> {
+  count: number = 0;
+
+  handleEvent(ctx: ViewContext, event: AnyEvent) {
+    if (event.type === "inc") this.count++;
+  }
+
+  render() {
+    return html`
+      <h3>${this.count}</h3>
+      <button hd-click="inc">+</button>
+    `;
+  }
+}
+```
+
+## Event Bindings / HTML Attributes
+There are four main types of user events that user can trigger:
+
+- Click events
+- Form events
+- Key events
+- Focus events
+
+You can add the following attributes to your HTML elements to send events (and custom data) to the server based on user interactions:
+
+| Binding         | Attribute            | Supported |
+| --------------- | -------------------- | --------- |
+| Custom Data     | `hd-value-*`        | ✅        |
+| Click Events    | `hd-click`          | ✅        |
+| Click Events    | `hd-click-away`     | ✅        |
+| Form Events     | `hd-change`         | ✅        |
+| Form Events     | `hd-submit`         | ✅        |
+| Form Events     | `hd-feedback-for`   | ✅        |
+| Form Events     | `hd-disable-with`   | ✅        |
+| Form Events     | `hd-trigger-action` | ❌        |
+| Form Events     | `hd-auto-recover`   | ❌        |
+| Focus Events    | `hd-blur`           | ✅        |
+| Focus Events    | `hd-focus`          | ✅        |
+| Focus Events    | `hd-window-blur`    | ✅        |
+| Focus Events    | `hd-window-focus`   | ✅        |
+| Key Events      | `hd-keydown`        | ✅        |
+| Key Events      | `hd-keyup`          | ✅        |
+| Key Events      | `hd-window-keydown` | ✅        |
+| Key Events      | `hd-window-keyup`   | ✅        |
+| Key Events      | `hd-key`            | ✅        |
+| DOM Patching    | `hd-update`         | ✅        |
+| DOM Patching    | `hd-remove`         | ❌        |
+| Client JS       | `hd-hook`           | ✅        |
+| Rate Limiting   | `hd-debounce`       | ✅        |
+| Rate Limiting   | `hd-throttle`       | ✅        |
+| Static Tracking | `hd-track-static`   | ❌        |
+
 
 ## Components
 Components are small, reusable pieces of UI that can be used across multiple `View`s.  You should put components somewhere outside of the `views/` directory so they aren't routed to accidentally.  `Components` can be stateless or stateful and encapsulate their own state in the latter case.  Components are rendered using the `component` method which takes a `Component` class and returns an instance of that class.
@@ -69,26 +126,75 @@ Components have the following API:
  * `render` defines the HTML to render for the `Component` based on the current state.  This method is called once when the `Component` is mounted and again whenever the `Component` state changes (if it is stateful).
  * `shutdown` is called when the `Component` is being shutdown / unmounted.  This method is useful for cleaning up any resources that the `Component` may have allocated.
 
+## JS Commands
+User events (clicks, etc) typically trigger a server-side event which updates the state and
+re-renders the HTML. Sometimes you want to update the DOM without (or in addition to) initiating a server round trip.
+This is where JS Commands come in.
+
+JS Commands support a number of client-side DOM manipulation function that can be used to update the DOM without a
+server round trip. These functions are:
+
+- `add_class` - Add css classes to an element including optional transition classes
+- `remove_class` - Remove css classes from an element including optional transition classes
+- `toggle_class` - Toggle a css class on an element including optional transition classes
+- `set_attribute` - Set an attribute on an element
+- `remove_attribute` - Remove an attribute from an element
+- `toggle_attribute` - Toggle an attribute on an element
+- `show` - Show an element including optional transition classes
+- `hide` - Hide an element including optional transition classes
+- `toggle` - Toggle the visibility of an element
+- `dispatch` - Dispatch a DOM event from an element
+- `transition` - Apply transition classes to an element (i.e.,  animate it)
+- `push` - Push an event to the LiveView server (i.e.,  trigger a server round trip)
+- `navigate` - Navigate to a new URL
+- `patch` - Patch the current URL
+- `focus` - Focus on an element
+- `focus_first` - Focus on the first child of an element
+- `pop_focus` - Pop the focus from the element
+- `push_focus` - Push the focus to the element
+- `exec` - Execute a function at the attribute location
+
+### JS Command Syntax
+
+JS Commands are used in the `render` function as part of the HTML markup:
+
+```ts
+render() {
+  return <div hd-click="${new JS().push("increment")}">Increment</div>
+}
+```
+
+### "Chainable" (i.e.,  fluent) Syntax
+
+JS Commands are "chainable" (i.e.,  fluent) so you can chain multiple commands together as needed and they will be
+executed in the order they are called:
+
+```ts
+render() {
+  return <div hd-click="${new JS().hide().push("increment")}">Increment and hide</div>
+}
+```
 
 ## Ejecting a Hotdogjs project
 When using the `bun create hotdogjs` command, the generated project comes with a `eject` script that, when run, will generate the basic server configuration, client-side javascript file, `hotdogjs-conf.toml`, and update the `package.json`.  This gives you the ability to customize the project to your liking including full control over the http server and client-side javascript file.
 
 ## How is Hotdogjs different from other frameworks?
 Hotdogjs supports both server rendering and client interactivity in a single programming model called [LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html).  Hotdogjs is built on the following principles:
- * **Server-side rendering** - HTML is rendered on the server and sent to the client
+ * **Server-side rendering + diffs** - HTTP returns HTML then diffs are applied to the DOM based on events from the client
  * **Client-side interactivity** - client-side interactivity is achieved by sending client-events to the server, updating the server state, and replying with diffs to the client which updates the DOM which results in very small payloads in both directions, resulting in a much faster user experience
- * **No client-side routing** - we use the browser's native routing along server-side routing to determine the page to render
- * **No client-side state management** - state is managed on the server so there is no need for a client-side state management library or synchronization which is a common source of complexity, slowness, and bugs
- * **No client-side data fetching** - data is always fetched on the server and applied to the state there which is faster and more secure (no need to expose APIs to the client or worry about CORS)
+ * **Server routing** - we use the browser's native routing along with server-side routing to determine the view to render
+ * **Server state management** - state is managed on the server so there is no need for a client-side state management library or synchronization which is a common source of complexity, slowness, and bugs
+ * **No APIs needed** - data is always fetched on the server and applied to the state there which is faster and more secure (no need to expose APIs to the client or worry about CORS)
  * **No virtual DOM** - Templates are based on tagged template literals which allows us to only consider parts of the template that can change rather than the full DOM tree.  There is no need to diff the entire DOM tree, only the parts that can change which is much faster.
  * **No JSX** - no JSX transpiling, JSX runtime, or additional javascript to download.  The client-side code is always the same, small size.
- * **No Typescript compilation** - TypeScript is executed directly by Bun
+ * **No compilation** - TypeScript is executed directly by Bun, no need to compile it first
 
 ## Configuration / hotdogjs-conf.toml
 If you want/need to override the default configuration of a Hotdogjs project, you can do so by creating a `hotdogjs-conf.toml` file in the root of your project.
 
 The following configuration options are supported:
  * `publicDir` - location of the public directory defaults to `public/`
+ * `layoutsDir` - location of the layouts directory (defaults to `layouts/`)
  * `clientFile` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
  * `clientDir` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
  * `skipBuildingClientJS` - whether the server should NOT build the client-side javascript file on startup (defaults to false)
@@ -99,6 +205,7 @@ The following configuration options are supported:
 
 Alternatively, you can override the default configuration by setting the following environment variables:
  * `HD_PUBLIC_DIR` - location of the public directory defaults to `public/`
+ * `HD_LAYOUTS_DIR` - location of the layouts directory (defaults to `layouts/`)
  * `HD_CLIENT_JS_FILE` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
  * `HD_CLIENT_JS_DEST_DIR` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
  * `HD_SKIP_BUILD_CLIENT_JS` - whether the server should NOT build the client-side javascript file on startup (defaults to false)
@@ -109,14 +216,12 @@ Alternatively, you can override the default configuration by setting the followi
 
 ## Roadmap / Known Issues
  * [ ] More documentation 😀
- * [ ] Update to server to use HTTP static routes
- * [ ] `eject` command to generate basic server and client-side javascript files so easier to customize
- * [ ] Better api for `hd-click`, `hd-change`, etc to bind to events in a type-safe way
- * [ ] Better location for layout templates
- * [ ] Better Form API with support for html
- * [ ] Use Bun's html escape
- * [ ] Support Components in template directly rather than `component` method
-
+ * [ ] More examples 📝
+ * [ ] Redis-backed PubSub
+ * [ ] Typesafe Event Binding
+ * [ ] Add support for `p` element in Tree array diffs
+ * [ ] Update to server to use HTTP static routes?
+ * [ ] Use Bun's html escape?
 
 ## Bun features we use
 Bun is fast as heck and provides some powerful features out-of-the-box that Hotdogjs takes advantage of.  We specifically lean into Bun features on purpose since this project seeks to take advantage of Bun in its entirety. Below is a list of Bun features that are used in Hotdogjs:
@@ -137,4 +242,9 @@ Bun is fast as heck and provides some powerful features out-of-the-box that Hotd
 
 
 ## How is this different from LiveViewJS?
-I wrote LiveViewJS too.  Hotdogjs started as a way to learn more about Bun and re-implement LiveViews for the Bun runtime.  The implementation and APIs are similar with some simplifications in Hotdogjs to make it more ergonomic for developers.
+I wrote [LiveViewJS](https://liveviewjs.com) and got annoying to abstract it in such a way to support Node and Deno.  Bun was intriguing because if its speed and native Typescript support.  Hotdogjs started as a way to learn more about Bun and re-implement LiveViews for the Bun runtime and based on other LiveView implementations I'd learned from along the way.  Overall, the implementation and APIs are similar with lots of simplifications in Hotdogjs to make it more ergonomic and more powerful with almost zero dependencies.
+
+I also wrote or helped write the following LiveView frameworks:
+ * [GoLive](https://github.com/canopyclimate/golive)
+ * [Undead](https://github.com/floodfx/undead)
+ * [LiveViewJS](https://liveviewjs.com)

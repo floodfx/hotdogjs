@@ -1,3 +1,4 @@
+import { JS } from "src/commands/jsCommands";
 import { BaseComponent, Component, type ComponentContext } from "src/component/component";
 import type { AnyEvent } from "src/view/view";
 
@@ -81,8 +82,17 @@ export class Template {
       if (d instanceof BaseComponent) {
         newDynamics[i] = renderer(d as Component<any, Template>);
       }
-      if (Array.isArray(d) && d.some((item) => item instanceof BaseComponent)) {
-        newDynamics[i] = d.map((item) => renderer(item as Component<any, Template>));
+      if (Array.isArray(d)) {
+        newDynamics[i] = d.map((item) => {
+          if (item instanceof BaseComponent) {
+            return renderer(item as Component<any, Template>);
+          }
+          // TODO handle more types specifically?
+          // e.g. else if(item instanceof Template) {
+          else {
+            return item;
+          }
+        });
       }
     });
     // work around readonly array
@@ -152,6 +162,13 @@ export class Template {
           }
         }
       }
+      // JS commands
+      else if (cur instanceof JS) {
+        return {
+          ...acc,
+          [`${index}`]: escapehtml(cur.toString()),
+        };
+      }
       // Array of Templates
       else if (Array.isArray(cur)) {
         // if array is empty just return empty string
@@ -173,25 +190,30 @@ export class Template {
               "Promise not supported in Template, try using Promise.all to wait for all promises to resolve."
             );
           } else if (cur[0] instanceof Template) {
-            // if any of the children are live components, then we assume they all are
-            // and do not return the statics for this array
-            let isComponentArray = false;
+            // Note on hardcoded "s" below:
+            // the Heex templates in elixir's liveview use a for comprehension
+            // (e.g. <=for ... %>...<% end %>) so expects two statics around the
+            // array of dynamics inside the for loop. We use array.map
+            // (e.g. ${items.map(i => html`...`)}) instead which doesn't have statics
+            // so we just hardcode the "s" here to just two empty string for the expected
+            // two statics in the equivalent for comprehension
+            s = ["", ""];
+
+            // for each element either return component id or template tree
+            // TODO handle weird case of coming across some other type
             d = cur.map((c: Template) => {
               if (c.isComponent) {
-                isComponentArray = true;
                 return [Number(c.statics[0])];
               } else {
-                return Object.values(c.toTree(componentRenderer));
+                return [c.toTree(componentRenderer)];
               }
             });
-            if (isComponentArray) {
-              return {
-                ...acc,
-                [`${index}`]: { d },
-              };
-            }
-            // not an array of Components so return the statics too
-            s = cur.map((c: Template) => c.statics)[0];
+
+            // TODO there is a "p" element that can be returned here as an optimization
+            // around reusing statics across items in the array.  p is a tree where
+            // each index is a static from the template tree.  the statics in the template
+            // tree can be replaced with the index of the p element.
+
             return {
               ...acc,
               [`${index}`]: { d, s },
@@ -215,7 +237,7 @@ export class Template {
       // Something else we don't know how to render
       else {
         if (cur instanceof Object) {
-          console.warn("Unhandled type, rendering as string", cur.constructor.name);
+          console.warn(`Unhandled type, rendering as string: constructor name "${cur.constructor.name}"`);
         }
         // just call to string on it
         return {
@@ -269,8 +291,20 @@ export class Template {
       // handle rendering components
       if (d instanceof BaseComponent) {
         return result + renderComponent(i, d) + s;
-      } else if (Array.isArray(d) && d.some((item) => item instanceof BaseComponent)) {
-        return result + d.map((item) => renderComponent(i, item)).join("") + s;
+      } else if (Array.isArray(d)) {
+        const res = d
+          .map((item) => {
+            if (item instanceof BaseComponent) {
+              return renderComponent(i, item);
+            }
+            // TODO handle more types specifically?
+            // e.g. else if(item instanceof Template) {
+            else {
+              return item.toString();
+            }
+          })
+          .join("");
+        return result + res + s;
       }
 
       // if not a component, just escape the dynamic value
