@@ -111,7 +111,7 @@ export class Conf {
 
 function getOrElse<T extends string | string[] | boolean>(key: string, defaultVal: T): T {
   if (typeof defaultVal === "boolean") {
-    return (process.env[key] === "true" ?? defaultVal) as T;
+    return (process.env[key] === "true" || process.env[key] === "1" ? true : defaultVal) as T;
   }
   if (typeof defaultVal === "string") {
     return (process.env[key] ?? defaultVal) as T;
