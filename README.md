@@ -15,6 +15,8 @@ Hotdogjs's key features are:
 
 Github repo: [https://github.com/floodfx/hotdogjs](https://github.com/floodfx/hotdogjs)
 
+**🎁 Feedback is a gift! 🎁**  Please ask questions, report issues, give feedback, etc by [opening an issue](https://github.com/floodfx/hotdogjs/issues).  I love hearing from you!
+
 ## How does Hotdogjs work?
 At a high level, LiveViews automatically detect registered events (clicks, form updates, etc.) and routes these events (and metadata) from client to server over a websocket.  When the server receives an event, it routes it to a developer defined handler which can update the server state and kicks off a re-render.  The server then calculates a view diff and sends this diff back to the client which is automatically applied to the DOM.
 
@@ -38,6 +40,14 @@ bun install
 bun dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Recent Talk at DenverScript Feb 25, 2025
+[![HotdogJS - A Bun-optimized LiveView Framework](https://img.youtube.com/vi/01OmwJzReL8/0.jpg)](https://www.youtube.com/watch?v=01OmwJzReL8?si=exlufKq05XIQGP5K&t=2791)
+
+[Link to Youtube](https://www.youtube.com/live/01OmwJzReL8?si=exlufKq05XIQGP5K&t=2791)
+
+Thanks to [DenverScript](https://denverscript.com/) for the invite and great community!
+
 
 ## Run the Examples
  * Clone the Hotdogjs repo - `git clone https://github.com/floodfx/hotdogjs`
