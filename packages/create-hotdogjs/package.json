@@ -1,17 +1,9 @@
 {
   "name": "create-hotdogjs",
-  "description": "Create a new HotdogJS project",
-  "version": "0.0.3",
+  "description": "My Awesome HotdogJS project",
+  "version": "0.1.0",
+  "bin": "./install.ts",
   "type": "module",
-  "bun-create": {
-    "preinstall": "echo 'Creating a new 🌭 HotdogJS project...'",
-    "postinstall": [
-      "echo '🌭 HotdogJS project created!'",
-      "echo 'opening browser...'",
-      "open http://localhost:3000"
-    ],
-    "start": "bun dev"
-  },
   "scripts": {
     "dev": "hotdogjs-watch",
     "start": "hotdogjs",
@@ -19,11 +11,13 @@
     "eject": "hotdogjs-eject"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.2"
   },
   "dependencies": {
-    "hotdogjs": "^0.2.2",
+    "hotdogjs": "^0.2.3",
     "@hotdogjs/client": "^0.0.1",
-    "@hotdogjs/form": "^0.0.6"
+    "@hotdogjs/form": "^0.0.7",
+    "@clack/prompts": "^0.10.0",
+    "picocolors": "^1.1.1"
   }
 }
