@@ -1,10 +1,9 @@
 #!/usr/bin/env bun
 
-import { confirm, intro, outro, spinner, text } from "@clack/prompts";
+import { confirm, intro, log, outro, spinner, text } from "@clack/prompts";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { join, relative, resolve } from "path";
-import color from "picocolors";
-
+import { blue, green } from "picocolors";
 // ASCII art for the welcome message
 const HOTDOG_ASCII = `🌭 HotdogJS - A Bun-optimized LiveView Framework`;
 const defaultProjectName = "my-hotdogjs-app";
@@ -118,11 +117,13 @@ async function main() {
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
   }
 
-  s.stop(`Project created successfully! 🎉`);
+  s.stop(`🎉 Project created successfully! 🎉`);
 
   // Show next steps
-  console.log([`cd ${relative(process.cwd(), absoluteProjectDir)}`, `bun install`, `bun dev`], "Next steps:");
-  console.log(`Happy coding with HotdogJS! ${color.yellow("🌭")}`);
+  log.message(blue("Next steps:"));
+  const nextSteps = [`cd ${relative(process.cwd(), absoluteProjectDir)}`, `bun install`, `bun dev`];
+  log.info(nextSteps.map((step) => green(step)).join("\n"));
+  outro("Happy coding with HotdogJS! 🌭");
 }
 
 // Run the main function

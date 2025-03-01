@@ -31,8 +31,10 @@ All of the complicated stuff (communication protocol, websocket lifecycle, state
 
 ## Quick Start
 ```bash
-bun create hotdogjs my-app
-cd my-app
+bun create hotdogjs
+# (follow the prompts)
+cd my-hotdogjs-app
+bun install
 bun dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
