@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { SignFormUpload } from "src/uploader/s3";
+import type { SignFormUpload } from "../../uploader/s3";
 import type { UploadEntry } from "./uploadEntry";
 
 /**

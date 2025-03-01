@@ -1,6 +1,6 @@
-import { JS } from "src/commands/jsCommands";
-import { BaseComponent, Component, type ComponentContext } from "src/component/component";
-import type { AnyEvent } from "src/view/view";
+import { JS } from "../commands/jsCommands";
+import { BaseComponent, Component, type ComponentContext } from "../component/component";
+import type { AnyEvent } from "../view/view";
 
 const ENTITIES: {
   [key: string]: string;
