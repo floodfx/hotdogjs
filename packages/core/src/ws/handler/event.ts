@@ -105,10 +105,12 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
       const key = clearFlashPayload.value.key;
       ctx.clearFlash(key);
       // render the live view with the cleared flash
-      return await ctx.view.render({
+      const tmpl = await ctx.view.render({
         csrfToken: ctx.csrfToken,
         uploads: ctx.uploadConfigs,
       });
+      // See note below about "Single File Executables Compatibility"
+      return new Template(tmpl.statics, tmpl.dynamics, tmpl.isComponent);
     }
 
     // if value is a string or number, wrap it in an object
@@ -120,10 +122,17 @@ export async function handleEvent(ctx: WsViewContext, payload: Phx.EventPayload)
     if (!cid) {
       // target is the View
       await ctx.view.handleEvent(ctx, { type: event, ...value });
-      return await ctx.view.render({
+      const tmpl = await ctx.view.render({
         csrfToken: ctx.csrfToken,
         uploads: ctx.uploadConfigs,
       });
+      // Note RE: Single File Executables Compatibility
+      // When creating a stand alone executable (https://bun.sh/docs/bundler/executables)
+      // we lose the fact that this `tmpl` variable is a Template instance.  Not sure why.
+      // I tried to recreate an example with simpler code but no luck.  As a workaround,
+      // we create a new instance with the template returned from render which ensures the
+      // caller of this method can use instanceof to check if the return value is a Template or a Tree
+      return new Template(tmpl.statics, tmpl.dynamics, tmpl.isComponent);
     }
 
     // if cid, then target is a Component
