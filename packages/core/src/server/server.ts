@@ -180,8 +180,13 @@ export class Server {
     if (!file.exists()) {
       throw new Error(`Cannot compile client file. "${this.#conf.clientJSSourceFile}" does not exist`);
     }
+    let clientJSSourceFile = this.#conf.clientJSSourceFile;
+    if (clientJSSourceFile.match(/^\/[A-Z]:/)) {
+      clientJSSourceFile = clientJSSourceFile.substring(1);
+    }
+
     return await Bun.build({
-      entrypoints: [this.#conf.clientJSSourceFile],
+      entrypoints: [clientJSSourceFile],
       outdir: this.#conf.clientJSDestDir,
     });
   }
