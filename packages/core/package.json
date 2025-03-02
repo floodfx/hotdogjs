@@ -1,6 +1,6 @@
 {
   "name": "hotdogjs",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "main": "src/index.ts",
   "description": "Hot-reloading, multi-player, single-file LiveViews at the speed of Bun",
   "devDependencies": {
