@@ -1,6 +1,6 @@
 {
   "name": "@hotdogjs/client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "src/client/hotdogjs-client.ts",
   "description": "Hot-reloading, multi-player, single-file LiveViews at the speed of Bun",
   "exports": {

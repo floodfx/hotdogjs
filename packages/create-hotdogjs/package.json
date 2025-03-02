@@ -1,7 +1,7 @@
 {
   "name": "create-hotdogjs",
   "description": "My Awesome HotdogJS project",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "bin": "./install.ts",
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "hotdogjs": "^0.2.3",
-    "@hotdogjs/client": "^0.0.1",
+    "@hotdogjs/client": "^0.0.2",
     "@hotdogjs/form": "^0.0.7",
     "@clack/prompts": "^0.10.0",
     "picocolors": "^1.1.1"
