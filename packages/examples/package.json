@@ -17,11 +17,13 @@
     "@langchain/ollama": "^0.2.0",
     "hotdogjs": "workspace:*",
     "js-confetti": "^0.12.0",
+    "qrcode": "^1.5.4",
     "showdown": "^2.1.0",
     "xstate": "^5.19.2",
     "zod": "latest"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.5",
     "@types/showdown": "^2.0.6"
   }
 }
