@@ -1,5 +1,6 @@
 import { type ServerWebSocket } from "bun";
 // workaround for global.BroadcastChannel type error
+import { nextTick } from "node:process";
 import { BroadcastChannel } from "node:worker_threads";
 import { URL } from "url";
 import type { Component, ComponentContext } from "../component/component";
@@ -258,7 +259,10 @@ export class WsViewContext<E extends ViewEvent = AnyEvent> implements ViewContex
   }
   dispatchEvent(event: Event<E>) {
     if (this.connected) {
-      return this.#wsHandler.handleSendInfo(event);
+      // ensure the event is sent after the current event loop tick
+      nextTick(() => {
+        return this.#wsHandler.handleSendInfo(event);
+      });
     }
   }
   subscribe(event: E["type"]) {
