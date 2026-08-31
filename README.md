@@ -1,3 +1,5 @@
+
+
 # 🌭 Hotdog JS
 
 What goes well with [Bun](https://bun.sh)? Hotdogs! 🌭🌭🌭
@@ -214,7 +216,7 @@ If you want/need to override the default configuration of a Hotdogjs project, yo
 The following configuration options are supported:
  * `publicDir` - location of the public directory defaults to `public/`
  * `layoutsDir` - location of the layouts directory (defaults to `layouts/`)
- * `clientFile` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
+ * `clientJSSourceFile` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
  * `clientDir` - location of the client-side javascript file (defaults to empty which uses the default client-side javascript file)
  * `skipBuildingClientJS` - whether the server should NOT build the client-side javascript file on startup (defaults to false)
  * `viewsDir` - where to find the views (defaults to `views/`)
